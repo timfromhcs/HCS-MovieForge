@@ -1,0 +1,24 @@
+{
+  "name": "hcs-movieforge-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HCS MovieForge - Autonomous Local AI Filmmaking Workstation",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run --workspace=apps/desktop dev",
+    "build": "npm run --workspaces build",
+    "test": "npm run --workspaces test",
+    "lint": "npm run --workspaces lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0"
+  },
+  "author": "Tim from HCS <timfromhcs@gmail.com>",
+  "license": "MIT"
+}

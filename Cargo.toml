@@ -1,0 +1,11 @@
+[workspace]
+members = [
+    "apps/desktop/src-tauri"
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Tim from HCS <timfromhcs@gmail.com>"]
+edition = "2021"
+license = "MIT"

@@ -1,0 +1,37 @@
+{
+  "id": "3d.trellis2.q4",
+  "name": "TRELLIS.2 Q4 Image-to-3D Suite",
+  "source": {
+    "type": "huggingface",
+    "repo": "ilintar/trellis2-gguf",
+    "revision": "c0071da54e38e146522c069352e8965ef8c8f5f4"
+  },
+  "files": [
+    "q4/birefnet.gguf",
+    "q4/dinov3.gguf",
+    "q4/shape_flow_512.gguf",
+    "q4/shape_dec.gguf",
+    "q4/tex_flow_512.gguf",
+    "q4/tex_dec.gguf"
+  ],
+  "sha256": {},
+  "size_bytes": {},
+  "role": "3d",
+  "backend": "trellis.cpp",
+  "compute": "vulkan",
+  "memory": {
+    "estimated_ram_mb": 4096,
+    "estimated_vram_mb": 6144,
+    "is_heavy_gpu": true
+  },
+  "capabilities": [
+    "image-to-3d",
+    "background-removal",
+    "mesh-generation",
+    "uv-texturing"
+  ],
+  "verification": {
+    "upstream_verified": true,
+    "local_verified": false
+  }
+}

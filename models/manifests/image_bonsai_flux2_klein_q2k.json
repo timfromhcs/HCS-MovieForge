@@ -1,0 +1,35 @@
+{
+  "id": "image.bonsai.flux2-klein.q2k",
+  "name": "Bonsai Image Ternary 4B FLUX.2 Klein",
+  "source": {
+    "type": "huggingface",
+    "repo": "Aatricks/bonsai-image-ternary-4B-FLUX2-klein-GGUF",
+    "revision": "8a0fb8cca1650395f0c77f9fd3a7aacd80f92bf2"
+  },
+  "files": [
+    "bonsai-flux2-klein-ternary-q2_k.gguf"
+  ],
+  "sha256": {
+    "bonsai-flux2-klein-ternary-q2_k.gguf": "409a9db80c65d2c5b24f62a2fe0f4b3afc0e47965de9a29a7fe4614713398500"
+  },
+  "size_bytes": {
+    "bonsai-flux2-klein-ternary-q2_k.gguf": 1361094080
+  },
+  "role": "image",
+  "backend": "stable-diffusion.cpp",
+  "compute": "vulkan",
+  "memory": {
+    "estimated_ram_mb": 1500,
+    "estimated_vram_mb": 2500,
+    "is_heavy_gpu": true
+  },
+  "capabilities": [
+    "text-to-image",
+    "image-editing",
+    "character-reference"
+  ],
+  "verification": {
+    "upstream_verified": true,
+    "local_verified": false
+  }
+}

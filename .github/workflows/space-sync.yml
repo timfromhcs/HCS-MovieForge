@@ -1,0 +1,29 @@
+name: Sync Hugging Face Space Demo
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'apps/space-demo/**'
+
+jobs:
+  sync-to-space:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -n "$HF_TOKEN" ]; then
+            git config --global user.email "timfromhcs@gmail.com"
+            git config --global user.name "timfromhcs"
+            # Optional sync adapter step if space repo is configured
+            echo "Ready to push apps/space-demo to Hugging Face Space."
+          else
+            echo "HF_TOKEN secret not set in repository; skipping sync."
+          fi

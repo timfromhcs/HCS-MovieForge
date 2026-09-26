@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# HCS MovieForge pre-commit hook: prevents accidental commit of secrets or large files
+set -e
+
+# Disallow committing .env files, but permit .env.example
+if git diff --cached --name-only | grep -E '(^|/)\.env' | grep -v '\.env\.example'; then
+    echo "[SECURITY ERROR] Attempting to commit active .env file! Aborting commit."
+    exit 1
+fi
+
+# Disallow committing large weight files
+if git diff --cached --name-only | grep -E '\.(gguf|bin|safetensors|pt|ckpt)$'; then
+    echo "[SECURITY ERROR] Large AI model binary detected in staged files! Aborting commit."
+    exit 1
+fi
+
+echo "[Pre-Commit] Security and binary checks passed."
+exit 0
