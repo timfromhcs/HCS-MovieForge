@@ -41,6 +41,28 @@ class ModelManager:
                 return m
         return None
 
+    def resolve_locked_path(self, stored: str) -> Path:
+        """Resolves a lock-file path portably across Windows/Linux.
+
+        Legacy entries store absolute Windows paths (backslashes); new entries
+        store paths relative to the models dir in POSIX form. Both resolve
+        against the current models_dir on any OS.
+        """
+        import re
+
+        normalized = stored.replace("\\", "/")
+        p = Path(normalized)
+        is_abs = p.is_absolute() or re.match(r"^[A-Za-z]:/", normalized) is not None
+        if is_abs:
+            parts = p.parts
+            if "models" in parts:
+                rel = Path(*parts[parts.index("models") + 1 :])
+                return self.models_dir / rel
+            return p
+        if p.parts and p.parts[0] == self.models_dir.name:
+            p = Path(*p.parts[1:])
+        return self.models_dir / p
+
     def get_lock(self) -> dict[str, Any]:
         """Reads active model lock file."""
         if self.lock_file.exists():
@@ -121,7 +143,7 @@ class ModelManager:
             if dest.exists():
                 dest.unlink()
             shutil.move(str(staged_path), str(dest))
-            promoted_files[filename] = str(dest)
+            promoted_files[filename] = dest.relative_to(self.models_dir).as_posix()
 
         # Cleanup staging directory
         shutil.rmtree(staging_model_dir, ignore_errors=True)

@@ -141,7 +141,7 @@ def doctor(ctx: click.Context, offline: bool) -> None:
     missing: list[str] = []
     for model_id, entry in lock.get("models", {}).items():
         for fname, fpath in entry.get("files", {}).items():
-            if not Path(fpath).exists():
+            if not mgr.resolve_locked_path(fpath).exists():
                 missing.append(f"{model_id}:{fname}")
     if missing:
         checks["models"] = {"status": "error", "message": f"{len(missing)} locked file(s) missing: {missing[0]}"}
@@ -264,10 +264,11 @@ def models_verify(ctx: click.Context, model_id: str) -> None:
     details = {}
     for fname, fpath in files.items():
         exp = expected_hashes.get(fname)
-        if not Path(fpath).exists():
+        resolved = mgr.resolve_locked_path(fpath)
+        if not resolved.exists():
             details[fname] = "MISSING_ON_DISK"
             all_match = False
-        elif exp and not verify_sha256(fpath, exp):
+        elif exp and not verify_sha256(resolved, exp):
             details[fname] = "CHECKSUM_MISMATCH"
             all_match = False
         else:
@@ -397,8 +398,9 @@ def benchmark(ctx: click.Context, save: bool, hdd: bool) -> None:
 @cli.command()
 @click.option("--prompt", "-p", required=True, help="Creative prompt for autonomous mini-film production.")
 @click.option("--project-name", default="MiniFilm_Robot", help="Name of project to create.")
+@click.option("--full", is_flag=True, help="Run the full §73 mini-film (2 chars, 6 shots, 24s).")
 @click.pass_context
-def produce(ctx: click.Context, prompt: str, project_name: str) -> None:
+def produce(ctx: click.Context, prompt: str, project_name: str, full: bool) -> None:
     """Executes the complete autonomous production pipeline (GEMINI.md Section 146)."""
     as_json = ctx.obj.get("JSON", False)
     mgr = ProjectManager()
@@ -411,6 +413,11 @@ def produce(ctx: click.Context, prompt: str, project_name: str) -> None:
     from agent.director.master_agent import MasterDirectorAgent
 
     agent = MasterDirectorAgent(project_root=p_path)
+    if full:
+        res = agent.run_full_minifilm(prompt=prompt, project_id=p_id)
+        if as_json:
+            print(json.dumps(res, indent=2))
+        return
     res = agent.run_production(prompt=prompt, project_id=p_id)
     if as_json:
         print(json.dumps(res, indent=2))
