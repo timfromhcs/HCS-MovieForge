@@ -1,0 +1,21 @@
+{
+  "phase": "G: Control-plane API + UI foundations",
+  "date": "2026-09-27",
+  "added": [
+    "apps/api: FastAPI health/models/projects/shots + WS /ws/jobs 1Hz snapshots, all manager-backed",
+    "packages/ui_kit (renamed from hyphen ui-kit): verification-driven labels with non-color text markers",
+    "server start: launches uvicorn API as tracked child with log routing; stop kills via persisted PIDs",
+    "supervisor log routing: child stdout/stderr to runtime/logs/<name>.log (fixes pipe-hang)",
+    "apps/space-demo/app.py: Gradio constrained demo (status + storyboard fixture), import-verified",
+    "apps/desktop/README.md: honest PENDING-BUILD shell contract (no fabricated versions/screenshots)"
+  ],
+  "verified": {
+    "pytest": "46/46 PASS (39 unit + 7 API automation incl. WS snapshot)",
+    "live_cycle": "server start -> HTTP /health ok (Vulkan, 7 models) -> server stop kills child, state STOPPED pids=[]",
+    "ruff_mypy_format": "PASS"
+  },
+  "known_limitations": [
+    "Desktop Tauri build + Playwright desktop paths PENDING (toolchain pinning at build time)",
+    "Space deployment (space-sync.yml) untested against HF runtime; app.py import-verified only"
+  ]
+}

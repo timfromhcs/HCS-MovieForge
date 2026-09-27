@@ -74,12 +74,18 @@ class ProcessSupervisor:
         self.save_state()
 
     def launch_service(self, name: str) -> bool:
-        """Spawns a registered service as a tracked child process."""
+        """Spawns a registered service as a tracked child process with log routing."""
         service = self.services.get(name)
         if service is None:
             return False
+        logs_dir = self.runtime_dir / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        log_path = logs_dir / f"{name}.log"
         try:
-            service.process = subprocess.Popen(service.command)
+            log_file = open(log_path, "ab")  # noqa: PTH123 - intentional append-binary routing
+            service.process = subprocess.Popen(
+                service.command, stdout=log_file, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL
+            )
         except Exception as e:
             self.logger.info(f"Service {name} failed to launch: {e}")
             service.state = ServiceState.CRASHED

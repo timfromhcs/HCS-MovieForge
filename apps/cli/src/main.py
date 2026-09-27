@@ -683,23 +683,67 @@ def server() -> None:
 
 
 @server.command(name="start")
+@click.option("--port", type=int, default=8765, help="Control-plane API port.")
+@click.option("--no-api", is_flag=True, help="Start supervisor without the API child.")
 @click.pass_context
-def server_start(ctx: click.Context) -> None:
-    """Starts the supervisor and persists service state."""
+def server_start(ctx: click.Context, port: int, no_api: bool) -> None:
+    """Starts the supervisor and launches the control-plane API as tracked child."""
+    import psutil
+
     from engine.supervisor.supervisor import ProcessSupervisor
 
     sup = ProcessSupervisor(runtime_dir=_PROJECT_ROOT / "runtime")
+    if sup.pid_file.exists():
+        try:
+            pid = int(sup.pid_file.read_text().strip())
+            if psutil.pid_exists(pid):
+                click.secho(f"[FAIL] Supervisor already running (PID {pid}).", fg="red")
+                sys.exit(1)
+        except (ValueError, OSError):
+            pass
     sup.start()
+    if not no_api:
+        sup.register_service(
+            "api",
+            [sys.executable, "-m", "uvicorn", "apps.api.src.main:app", "--host", "127.0.0.1", "--port", str(port)],
+            restart_policy="always",
+            max_restarts=3,
+        )
+        if sup.launch_service("api"):
+            click.secho(f"[OK] API child launched on 127.0.0.1:{port}.", fg="green")
+        else:
+            click.secho("[FAIL] API child failed to launch.", fg="red")
+            sys.exit(1)
     click.secho(f"[OK] Supervisor running (pid file: {sup.pid_file}).", fg="green")
 
 
 @server.command(name="stop")
 @click.pass_context
 def server_stop(ctx: click.Context) -> None:
-    """Stops tracked child services gracefully."""
+    """Stops tracked child services gracefully via the persisted PID list."""
+    import signal as _signal
+
+    import psutil
+
     from engine.supervisor.supervisor import ProcessSupervisor
 
     sup = ProcessSupervisor(runtime_dir=_PROJECT_ROOT / "runtime")
+    state_file = sup.state_file
+    pids: list[int] = []
+    if state_file.exists():
+        try:
+            pids = [int(p) for p in json.loads(state_file.read_text()).get("pids", [])]
+        except (ValueError, OSError, KeyError):
+            pids = []
+    me = os.getpid()
+    for pid in pids:
+        if pid == me:
+            continue
+        try:
+            if psutil.pid_exists(pid):
+                os.kill(pid, _signal.SIGTERM)
+        except (OSError, PermissionError):
+            continue
     sup.stop()
     click.secho("[OK] Supervisor stopped.", fg="green")
 
