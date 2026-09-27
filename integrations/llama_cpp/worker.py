@@ -1,6 +1,7 @@
 """llama.cpp integration worker running Qwen3-VL 8B Instruct with Vulkan acceleration."""
 
 import os
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -72,6 +73,10 @@ class LlamaWorker(BaseWorker):
         temp = params.get("temperature", 0.7)
         max_tokens = params.get("max_tokens", 512)
         n_gpu_layers = params.get("n_gpu_layers", 33)
+        system_prompt = params.get(
+            "system_prompt",
+            "You are a concise visual inspector. Answer directly with no greetings.",
+        )
 
         # Auto-discover models in model repository if not explicitly passed
         if not model_file or not os.path.exists(model_file):
@@ -98,6 +103,9 @@ class LlamaWorker(BaseWorker):
             str(exec_bin),
             "-m",
             str(model_file),
+            "--jinja",
+            "-sys",
+            system_prompt,
             "-p",
             prompt,
             "-c",
@@ -127,13 +135,18 @@ class LlamaWorker(BaseWorker):
                     error=(f"llama failed (code {self._current_process.returncode}): {stderr[-500:]}"),
                 )
 
-            # Extract clean output text (filter debug log lines)
-            clean_lines = [
+            # Extract clean output text: drop log lines, then strip echoed chat-template prompt
+            raw_lines = [
                 line
                 for line in stdout.splitlines()
-                if not line.startswith("<") and not line.startswith("0.") and line.strip()
+                if line.strip() and not line.startswith("0.") and "llama_" not in line[:24]
             ]
-            response_text = "\n".join(clean_lines).strip()
+            cut = 0
+            for i, line in enumerate(raw_lines):
+                if "im_end" in line or "assistant" in line.lower() and "<|" in line:
+                    cut = i + 1
+            response_text = "\n".join(raw_lines[cut:]).strip()
+            response_text = re.sub(r"<\|[^|]*\|>", "", response_text).strip() if response_text else ""
 
             telemetry = WorkerTelemetry(
                 worker_id=self.worker_id,

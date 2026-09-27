@@ -1,0 +1,22 @@
+{
+  "id": "tts.cosyvoice3.05b",
+  "name": "CosyVoice 3 0.5B (experimental CPU route)",
+  "role": "tts",
+  "backend": "cosyvoice.cpp (not staged)",
+  "compute": "cpu",
+  "status": "EXPERIMENTAL",
+  "source": {
+    "type": "huggingface",
+    "repo": "Lourdle/Fun-CosyVoice3-0.5B-2512-GGUF",
+    "revision": "UNPINNED_EXPERIMENTAL"
+  },
+  "runtime_source": "https://github.com/Lourdle/cosyvoice.cpp",
+  "files": [],
+  "sha256": {},
+  "size_bytes": {},
+  "capabilities": ["text-to-speech"],
+  "verification": {
+    "upstream_vulkan": "NOT_WORKING_PER_UPSTREAM_2026-09-27",
+    "local": "UNVERIFIED"
+  }
+}

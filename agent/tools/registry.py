@@ -270,6 +270,38 @@ class ToolRegistry:
             handler=self._tool_motion_plan,
         )
 
+        # 12. lipsync.create (energy baseline; phoneme-exact path pending CosyVoice)
+        self.register_tool(
+            name="lipsync.create",
+            description="Build jaw-open viseme timing from dialogue WAV energy and key it in Blender.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "audio_path": {"type": "string"},
+                    "output_filename": {"type": "string"},
+                },
+                "required": ["project_id", "audio_path"],
+            },
+            handler=self._tool_lipsync_create,
+        )
+
+        # 13. music.generate (honest gate: EXPERIMENTAL until acestep.cpp staged)
+        self.register_tool(
+            name="music.generate",
+            description="Generate music stems (UNAVAILABLE until ACE-Step runtime staged).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "mood": {"type": "string"},
+                    "tempo": {"type": "number"},
+                },
+                "required": ["project_id"],
+            },
+            handler=self._tool_music_generate,
+        )
+
         # 8. agent.inspect_image
         self.register_tool(
             name="agent.inspect_image",
@@ -663,6 +695,62 @@ class ToolRegistry:
         from integrations.blender.cine import parse_motion_plan
 
         return {"status": "ok", "steps": parse_motion_plan(kwargs["text"])}
+
+    def _tool_lipsync_create(self, **kwargs) -> dict[str, Any]:
+        import json as _json
+
+        from integrations.blender.lipsync import wav_to_visemes
+
+        project_id = kwargs["project_id"]
+        try:
+            timeline = wav_to_visemes(kwargs["audio_path"])
+        except Exception as e:
+            return {"status": "error", "message": f"viseme analysis failed: {e}"}
+        if not timeline:
+            return {"status": "error", "message": "empty viseme timeline"}
+        out_name = kwargs.get("output_filename") or f"lipsync_{os.urandom(4).hex()}.png"
+        out_path = self.project_root / "renders" / out_name
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        vis_path = out_path.with_suffix(".visemes.json")
+        ev_path = out_path.with_suffix(".evidence.json")
+        with open(vis_path, "w", encoding="utf-8") as f:
+            _json.dump(timeline, f, indent=2)
+        script = Path("integrations/blender/scripts/lipsync_apply.py").resolve()
+        cmd = [
+            self.blender_worker.blender_path,
+            "-b",
+            "--python",
+            str(script),
+            "--",
+            "--visemes",
+            str(vis_path.resolve()),
+            "--output",
+            str(out_path.resolve()),
+            "--evidence",
+            str(ev_path.resolve()),
+        ]
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        if res.returncode != 0 or not out_path.exists():
+            return {"status": "error", "message": f"lipsync Blender pass failed: {res.stderr[-500:]}"}
+        rec = self.artifact_mgr.register_artifact(
+            project_id=project_id,
+            kind=ArtifactKind.ANIMATION,
+            file_path=out_path,
+            producer="blender_lipsync_baseline",
+            producer_version="1.0.0",
+            canonical=True,
+            metadata={"viseme_frames": len(timeline), "method": "rms_energy_baseline"},
+        )
+        return {"status": "ok", "artifact_id": rec.artifact_id, "path": str(out_path), "frames": len(timeline)}
+
+    def _tool_music_generate(self, **kwargs) -> dict[str, Any]:
+        return {
+            "status": "error",
+            "error_class": "MISSING_DEPENDENCY",
+            "message": (
+                "music.generate UNAVAILABLE: acestep.cpp runtime not staged (see integrations/acestep/STATUS.md)."
+            ),
+        }
 
     def _tool_agent_inspect_image(self, **kwargs) -> dict[str, Any]:
         image_path = kwargs["image_path"]

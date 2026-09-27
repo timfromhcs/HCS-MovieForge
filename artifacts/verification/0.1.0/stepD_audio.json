@@ -1,0 +1,32 @@
+{
+  "phase": "D: Audio korrekt + Qwen-Promptfix",
+  "date": "2026-09-27",
+  "qwen_fix": {
+    "root_cause": "jinja chat template disabled by default + harness/worker never stripped echoed prompt; model output was fine, filter was wrong",
+    "change": "worker+harness pass --jinja with concise system prompt; filters cut everything through last im_end/assistant marker and strip <|..|> tokens",
+    "verified": "harness PASS 8.98s, single clean sentence, no greeting leakage"
+  },
+  "cosyvoice": {
+    "status": "EXPERIMENTAL CPU-only route (upstream-verified 2026-09-27)",
+    "facts": "official Python/CUDA/vLLM; community cosyvoice.cpp Windows x64 GGUF works on CPU/CUDA/Metal/SYCL, Vulkan NOT working per upstream backend table",
+    "active_tts": "Piper en_US-lessac-medium, harness PASS, explicitly declared compatibility lane (no silent fallback)"
+  },
+  "acestep": {
+    "status": "EXPERIMENTAL, music.generate honestly UNAVAILABLE (MISSING_DEPENDENCY, no fake WAV)",
+    "facts": "ACE-Step 1.5 open weights; acestep.cpp native GGML runtime builds Vulkan (buildvulkan.cmd); blockers are C++ build + multi-GB GGUF staging, recorded in STATUS.md"
+  },
+  "lipsync": {
+    "method": "rms_energy_baseline (SIL/CLOSED/MID/OPEN + jaw_open 0..1 per 100ms), phoneme-exact pending CosyVoice",
+    "verified": "unit 3/3 synthetic; golden on spark7_dialogue.wav (>10 frames, OPEN present) + Blender jaw keys + proof render PASS"
+  },
+  "verified": {
+    "pytest": "34/34 PASS (27 unit + 7 golden inkl. piper real-WAV + music-honest-gate)",
+    "ruff_mypy": "PASS",
+    "collision_fix": "golden lipsync renamed to test_lipsync_golden.py + package __init__ to prevent basename collisions"
+  },
+  "known_limitations": [
+    "CosyVoice CPU build + GGUF staging not executed (needs ~1GB downloads + vendor build)",
+    "acestep.cpp build + model staging not executed (multi-GB, C++ toolchain run)",
+    "lipsync is jaw-open baseline, not phoneme/viseme-exact; face rig pending humanoid fixture"
+  ]
+}

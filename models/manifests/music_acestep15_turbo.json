@@ -1,0 +1,21 @@
+{
+  "id": "music.acestep15.turbo",
+  "name": "ACE-Step 1.5 Turbo (experimental Vulkan route)",
+  "role": "music",
+  "backend": "acestep.cpp (not staged)",
+  "compute": "vulkan_or_cpu",
+  "status": "EXPERIMENTAL",
+  "source": {
+    "type": "upstream",
+    "repo": "ace-step/ACE-Step-1.5",
+    "revision": "UNPINNED_EXPERIMENTAL"
+  },
+  "runtime_source": "https://github.com/ServeurpersoCom/acestep.cpp",
+  "files": [],
+  "sha256": {},
+  "size_bytes": {},
+  "capabilities": ["text-to-music"],
+  "verification": {
+    "local": "UNVERIFIED"
+  }
+}

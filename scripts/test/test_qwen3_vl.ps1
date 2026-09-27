@@ -43,6 +43,8 @@ $ArgsList = @(
     "-m", $ModelFile,
     "--mmproj", $MmprojFile,
     "--image", $TestImage,
+    "--jinja",
+    "-sys", "You are a concise visual inspector. Answer with exactly one descriptive sentence, no greetings.",
     "-p", "Describe this image in one concise sentence.",
     "-c", "2048",
     "-n", "64",
@@ -56,7 +58,13 @@ $ExitCode = $LASTEXITCODE
 $Stopwatch.Stop()
 
 $OutLines = @($RawOutput | ForEach-Object { "$($_)" })
-$ResultSentence = ($OutLines | Where-Object { $_ -notmatch '^\d+\.\d+\.\d+' -and $_ -notmatch '^<' -and $_.Trim() -ne "" } | Out-String).Trim()
+$ContentLines = @($OutLines | Where-Object { $_ -notmatch '^\d+\.\d+\.\d+' -and $_.Trim() -ne "" })
+$CutIndex = -1
+for ($i = 0; $i -lt $ContentLines.Count; $i++) {
+    if ($ContentLines[$i] -match 'im_end' -or ($ContentLines[$i] -match 'assistant' -and $ContentLines[$i] -match '<\|')) { $CutIndex = $i }
+}
+if ($CutIndex -ge 0 -and ($CutIndex + 1) -lt $ContentLines.Count) { $ContentLines = $ContentLines[($CutIndex + 1)..($ContentLines.Count - 1)] }
+$ResultSentence = (($ContentLines | ForEach-Object { $_ -replace '<\|[^|]*\|>', '' }) | Out-String).Trim()
 
 if ($ExitCode -eq 0 -and $ResultSentence.Length -gt 5) {
     Write-Host "[PASS] Qwen3-VL multimodal inspection succeeded in $($Stopwatch.Elapsed.TotalSeconds.ToString('F2'))s" -ForegroundColor Green
