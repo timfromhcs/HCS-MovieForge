@@ -15,15 +15,31 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push to Hugging Face Space
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Push apps/space-demo to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          if [ -n "$HF_TOKEN" ]; then
-            git config --global user.email "timfromhcs@gmail.com"
-            git config --global user.name "timfromhcs"
-            # Optional sync adapter step if space repo is configured
-            echo "Ready to push apps/space-demo to Hugging Face Space."
-          else
+          if [ -z "$HF_TOKEN" ]; then
             echo "HF_TOKEN secret not set in repository; skipping sync."
+            exit 0
           fi
+          python -m pip install --upgrade pip
+          pip install huggingface_hub
+          python - <<'EOF'
+          import os
+          from huggingface_hub import HfApi
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          info = api.upload_folder(
+              folder_path="apps/space-demo",
+              repo_id="timfromhcs/HCS-MovieForge",
+              repo_type="space",
+              commit_message="ci(space-sync): sync demo adapter from main repo",
+              allow_patterns=["app.py", "space_status.py", "requirements.txt", "README.md"],
+          )
+          print("synced commit:", info.oid)
+          EOF

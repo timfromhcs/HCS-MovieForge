@@ -13,7 +13,10 @@ if str(_ROOT) not in sys.path:
 
 import gradio as gr  # noqa: E402
 
-from packages.ui_kit.src.status import backend_label  # noqa: E402
+try:
+    from packages.ui_kit.src.status import backend_label  # noqa: E402
+except ImportError:  # Hugging Face Space: self-contained sibling module
+    from space_status import backend_label  # noqa: E402
 
 
 def backend_status() -> str:
