@@ -94,11 +94,26 @@ def setup_camera(target_center, target_radius, frames=1):
         target_empty.rotation_euler = (0, 0, math.radians(360))
         target_empty.keyframe_insert(data_path="rotation_euler", frame=frames + 1)
 
-        # Set linear interpolation
-        if target_empty.animation_data and target_empty.animation_data.action:
-            for fcurve in target_empty.animation_data.action.fcurves:
-                for kf in fcurve.keyframe_points:
-                    kf.interpolation = "LINEAR"
+        # Set linear interpolation (Blender 4.4+ layered Action API compatible)
+        try:
+            if target_empty.animation_data and target_empty.animation_data.action:
+                action = target_empty.animation_data.action
+                fcurves = list(getattr(action, "fcurves", []) or [])
+                if not fcurves and hasattr(action, "layers"):
+                    slot = getattr(target_empty.animation_data, "action_slot", None)
+                    for layer in action.layers:
+                        for strip in layer.strips:
+                            try:
+                                bag = strip.channelbag(slot) if slot is not None else None
+                            except Exception:
+                                bag = None
+                            if bag is not None:
+                                fcurves.extend(getattr(bag, "fcurves", []))
+                for fcurve in fcurves:
+                    for kf in fcurve.keyframe_points:
+                        kf.interpolation = "LINEAR"
+        except Exception as e:
+            print(f"[WARN] linear interpolation unavailable, keeping default: {e}")
 
 
 def main():

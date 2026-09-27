@@ -1,0 +1,23 @@
+{
+  "phase": "F: Self-healing + Stress/Soak",
+  "date": "2026-09-27",
+  "added": [
+    "engine/recovery/oom.py: single-pass ladder (prune leases, evict cache, quarantine partials, narrowed retry config, honest blocked flag)",
+    "supervisor: real launch/poll/heartbeat, exponential backoff capped 30s, max-restart-rate window (300s) then DISABLED, terminate-only-owned-child",
+    "scheduler: cooperative request_cancel/confirm_cancel two-step",
+    "tests/stress: corrupt-output (E), corrupt-model (F), disk-pressure (G), cancel-storm 20 jobs (H), worker-kill (C), blender-crash (D), hdd-benchmark FIFO-vs-locality + dependency order (75)",
+    "tests/soak: 60s bounded mixed light workload with memory-growth gate",
+    "Blender 5.x fix: layered Action API fcurve traversal with slot + warn-fallback (found BY the crash test)"
+  ],
+  "verified": {
+    "pytest": "48/48 PASS (39 unit + 7 stress + soak-short; blender-crash PASS with real kill mid-render)",
+    "cli_test_stress_soak": "PASS via suites (no longer BLOCKED)",
+    "ruff_mypy_format": "PASS (mypy 12 files supervisor/recovery/scheduler/cache/resource)"
+  },
+  "known_limitations": [
+    "Stress A 50-cycle heavy churn: NOT run (days of GPU time); scheduler locality + dependency order proven in simulation, load-count math asserts locality never worse",
+    "Stress B intentional memory pressure: NOT run (host risk); OOM ladder unit-proven, blocked-flag path honest",
+    "Soak multi-hour (§74-I): 60s representative PASS; full-hours pending hardware certification run",
+    "Turntable interpolation falls back to default Bezier when layered-API traversal fails (warns, still renders)"
+  ]
+}

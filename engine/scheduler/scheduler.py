@@ -153,6 +153,30 @@ class JobScheduler:
 
             return selected
 
+    def request_cancel(self, job_id: str) -> bool:
+        """Marks a cancellable job CANCEL_REQUESTED (cooperative first step)."""
+        job = self.get_job(job_id)
+        if job is None:
+            return False
+        if job.status in (
+            JobStatus.QUEUED,
+            JobStatus.WAITING_RESOURCE,
+            JobStatus.PREPARING,
+            JobStatus.PRELOADING,
+            JobStatus.RUNNING,
+        ):
+            self.update_job_status(job_id, JobStatus.CANCEL_REQUESTED)
+            return True
+        return False
+
+    def confirm_cancel(self, job_id: str) -> bool:
+        """Moves a CANCEL_REQUESTED job to CANCELLED after the worker stopped safely."""
+        job = self.get_job(job_id)
+        if job is None or job.status != JobStatus.CANCEL_REQUESTED:
+            return False
+        self.update_job_status(job_id, JobStatus.CANCELLED)
+        return True
+
     def update_job_status(
         self,
         job_id: str,
