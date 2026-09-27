@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  package:
+  package-linux:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -17,13 +17,47 @@ jobs:
           mkdir -p dist
           tar -czvf dist/hcs-movieforge-linux-x64-portable.tar.gz \
             --exclude='.git' \
-            --exclude='.env*' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='bin' \
             --exclude='models/staging' \
+            --exclude='models/*.gguf' \
+            --exclude='models/**/*.gguf' \
+            --exclude='models/**/*.bin' \
+            --exclude='models/**/*.safetensors' \
+            --exclude='models/**/*.onnx' \
             --exclude='projects/*' \
             --exclude='runtime/*' \
+            --exclude='cache/*' \
+            --exclude='logs/*' \
+            --exclude='dist/*' \
             .
           cd dist
-          sha256sum hcs-movieforge-linux-x64-portable.tar.gz > checksums.txt
+          sha256sum hcs-movieforge-linux-x64-portable.tar.gz > checksums-linux.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  package-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package Portable Zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          $excludes = @('.git', '.env', 'bin', 'runtime', 'cache', 'logs', 'dist', 'projects')
+          $items = Get-ChildItem -Force | Where-Object { $_.Name -notin $excludes }
+          Compress-Archive -Path $items -DestinationPath dist/hcs-movieforge-windows-x64-portable.zip -Force
+          (Get-FileHash dist/hcs-movieforge-windows-x64-portable.zip -Algorithm SHA256).Hash |
+            Out-File dist/checksums-windows.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
