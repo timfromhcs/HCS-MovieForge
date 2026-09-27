@@ -23,7 +23,13 @@ bin/
 projects/*
 !projects/.gitkeep
 
-# Model weights and binaries (never commit large weights to Git)
+# Model weights and binaries (never commit local model stores to Git)
+models/*
+!models/manifests/
+!models/manifests/**
+!models/locks/
+!models/locks/**
+!models/README.md
 models/**/*.gguf
 models/**/*.safetensors
 models/**/*.bin

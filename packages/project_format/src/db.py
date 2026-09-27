@@ -76,6 +76,79 @@ CREATE INDEX IF NOT EXISTS idx_artifacts_kind ON artifacts(kind);
 CREATE INDEX IF NOT EXISTS idx_artifacts_project ON artifacts(project_id);
 """
 
+MIGRATION_V2 = """
+CREATE TABLE IF NOT EXISTS characters (
+    character_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    visual_style TEXT,
+    reference_artifact_ids TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    metadata TEXT
+);
+
+CREATE TABLE IF NOT EXISTS locations (
+    location_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    time_of_day TEXT,
+    weather TEXT,
+    reference_artifact_ids TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    metadata TEXT
+);
+
+CREATE TABLE IF NOT EXISTS props (
+    prop_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    reference_artifact_ids TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    metadata TEXT
+);
+
+CREATE TABLE IF NOT EXISTS scenes (
+    scene_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    scene_number INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    location_id TEXT,
+    time_of_day TEXT,
+    synopsis TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS shots (
+    shot_id TEXT PRIMARY KEY,
+    scene_id TEXT NOT NULL,
+    project_id TEXT NOT NULL,
+    shot_number INTEGER NOT NULL,
+    camera_prompt TEXT,
+    action_description TEXT,
+    dialogue TEXT,
+    character_ids TEXT,
+    duration_sec REAL DEFAULT 3.0,
+    status TEXT DEFAULT 'PLANNED',
+    video_artifact_id TEXT,
+    audio_artifact_id TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(scene_id) REFERENCES scenes(scene_id) ON DELETE CASCADE
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS story_bible USING fts5(
+    entity_id,
+    entity_type,
+    title,
+    content,
+    tags
+);
+
+CREATE INDEX IF NOT EXISTS idx_shots_scene ON shots(scene_id, shot_number);
+"""
+
 
 class ProjectDB:
     def __init__(self, db_path: Path | str):
@@ -93,8 +166,18 @@ class ProjectDB:
 
     def _init_db(self) -> None:
         with self.get_connection() as conn:
-            conn.executescript(MIGRATION_V1)
-            conn.execute("INSERT OR IGNORE INTO schema_versions (version) VALUES (1);")
+            # Check current version
+            conn.execute("CREATE TABLE IF NOT EXISTS schema_versions (version INTEGER PRIMARY KEY, applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);")
+            cursor = conn.execute("SELECT MAX(version) FROM schema_versions;")
+            row = cursor.fetchone()
+            curr_ver = row[0] or 0
+
+            if curr_ver < 1:
+                conn.executescript(MIGRATION_V1)
+                conn.execute("INSERT INTO schema_versions (version) VALUES (1);")
+            if curr_ver < 2:
+                conn.executescript(MIGRATION_V2)
+                conn.execute("INSERT INTO schema_versions (version) VALUES (2);")
             conn.commit()
 
     def check_integrity(self) -> bool:

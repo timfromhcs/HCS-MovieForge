@@ -1,0 +1,37 @@
+{
+  "id": "voice.piper.en_lessac_medium",
+  "name": "Piper Neural TTS - English Lessac Medium",
+  "source": {
+    "type": "huggingface",
+    "repo": "rhasspy/piper-voices",
+    "revision": "main"
+  },
+  "files": [
+    "en/en_US/lessac/medium/en_US-lessac-medium.onnx",
+    "en/en_US/lessac/medium/en_US-lessac-medium.onnx.json"
+  ],
+  "sha256": {
+    "en/en_US/lessac/medium/en_US-lessac-medium.onnx": "5efe09e69902187827af646e1a6e9d269dee769f9877d17b16b1b46eeaaf019f",
+    "en/en_US/lessac/medium/en_US-lessac-medium.onnx.json": "efe19c417bed055f2d69908248c6ba650fa135bc868b0e6abb3da181dab690a0"
+  },
+  "size_bytes": {
+    "en/en_US/lessac/medium/en_US-lessac-medium.onnx": 63201294,
+    "en/en_US/lessac/medium/en_US-lessac-medium.onnx.json": 4885
+  },
+  "role": "voice",
+  "backend": "piper",
+  "compute": "cpu",
+  "memory": {
+    "estimated_ram_mb": 512,
+    "estimated_vram_mb": 0,
+    "is_heavy_gpu": false
+  },
+  "capabilities": [
+    "dialogue-synthesis",
+    "text-to-speech"
+  ],
+  "verification": {
+    "upstream_verified": true,
+    "local_verified": false
+  }
+}

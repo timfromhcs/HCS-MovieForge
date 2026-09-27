@@ -1,0 +1,34 @@
+{
+  "id": "vae.flux2.dev",
+  "name": "FLUX.2 VAE / Autoencoder",
+  "source": {
+    "type": "huggingface",
+    "repo": "Comfy-Org/flux2-klein-4B",
+    "revision": "5f526678002e43af5551dadb73ce2e8c91b43afe"
+  },
+  "files": [
+    "split_files/vae/flux2-vae.safetensors"
+  ],
+  "sha256": {
+    "split_files/vae/flux2-vae.safetensors": "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3"
+  },
+  "size_bytes": {
+    "split_files/vae/flux2-vae.safetensors": 336211292
+  },
+  "role": "vae",
+  "backend": "stable-diffusion.cpp",
+  "compute": "vulkan",
+  "memory": {
+    "estimated_ram_mb": 512,
+    "estimated_vram_mb": 512,
+    "is_heavy_gpu": false
+  },
+  "capabilities": [
+    "latent-decode",
+    "latent-encode"
+  ],
+  "verification": {
+    "upstream_verified": true,
+    "local_verified": false
+  }
+}

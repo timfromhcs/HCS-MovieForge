@@ -107,6 +107,26 @@ def doctor(ctx: click.Context, offline: bool) -> None:
     else:
         checks["vulkan"] = {"status": "warning", "message": "Vulkan device details could not be probed"}
 
+    # Check AI Engine Backends
+    from integrations.stable_diffusion_cpp.worker import StableDiffusionWorker
+    from integrations.trellis_cpp.worker import TrellisWorker
+    from integrations.llama_cpp.worker import LlamaWorker
+    from integrations.whisper_cpp.worker import WhisperWorker
+    from integrations.piper.worker import PiperWorker
+
+    for name, worker in [
+        ("sd.cpp", StableDiffusionWorker()),
+        ("trellis.cpp", TrellisWorker()),
+        ("llama.cpp", LlamaWorker()),
+        ("whisper.cpp", WhisperWorker()),
+        ("piper", PiperWorker()),
+    ]:
+        h = worker.health()
+        if h.get("status") == "ok":
+            checks[name] = {"status": "ok", "message": f"{worker.backend_name} ({worker.backend_version})"}
+        else:
+            checks[name] = {"status": "warning", "message": h.get("message", "Not found")}
+
     if as_json:
         print(json.dumps({"overall_status": "READY" if all_ok else "DEGRADED", "checks": checks}, indent=2))
     else:
@@ -167,6 +187,74 @@ def models_list(ctx: click.Context) -> None:
             click.echo(f"{r['id']:<30} {r['role']:<10} {r['backend']:<20} {inst_str}")
 
 
+@models.command(name="sync")
+@click.argument("model_id")
+@click.pass_context
+def models_sync(ctx: click.Context, model_id: str) -> None:
+    """Downloads, verifies hashes, and atomically promotes a model to active store."""
+    as_json = ctx.obj.get("JSON", False)
+    mgr = ModelManager()
+    token = os.environ.get("HF_TOKEN")
+    click.echo(f"Syncing model: {model_id}...")
+    success, errors = mgr.download_and_verify(model_id, token=token)
+    if success:
+        if as_json:
+            print(json.dumps({"status": "synced", "model_id": model_id}))
+        else:
+            click.secho(f"[OK] Model {model_id} successfully downloaded and verified.", fg="green")
+    else:
+        if as_json:
+            print(json.dumps({"status": "failed", "model_id": model_id, "errors": errors}))
+        else:
+            click.secho(f"[FAIL] Failed to sync {model_id}: {errors}", fg="red")
+        sys.exit(1)
+
+
+@models.command(name="verify")
+@click.argument("model_id")
+@click.pass_context
+def models_verify(ctx: click.Context, model_id: str) -> None:
+    """Verifies local checksums of an installed model against its manifest."""
+    as_json = ctx.obj.get("JSON", False)
+    mgr = ModelManager()
+    manifest = mgr.get_manifest(model_id)
+    if not manifest:
+        click.secho(f"[FAIL] Manifest not found for model: {model_id}", fg="red")
+        sys.exit(1)
+
+    lock = mgr.get_lock()
+    installed = lock.get("models", {}).get(model_id)
+    if not installed:
+        click.secho(f"[FAIL] Model {model_id} is not recorded in lock file.", fg="red")
+        sys.exit(1)
+
+    from packages.validators.src.hash_validator import verify_sha256
+    files = installed.get("files", {})
+    expected_hashes = manifest.get("sha256", {})
+
+    all_match = True
+    details = {}
+    for fname, fpath in files.items():
+        exp = expected_hashes.get(fname)
+        if not Path(fpath).exists():
+            details[fname] = "MISSING_ON_DISK"
+            all_match = False
+        elif exp and not verify_sha256(fpath, exp):
+            details[fname] = "CHECKSUM_MISMATCH"
+            all_match = False
+        else:
+            details[fname] = "VERIFIED_OK"
+
+    if as_json:
+        print(json.dumps({"model_id": model_id, "status": "OK" if all_match else "FAILED", "files": details}))
+    else:
+        if all_match:
+            click.secho(f"[OK] Model {model_id} integrity verified cleanly.", fg="green")
+        else:
+            click.secho(f"[FAIL] Model {model_id} verification failed: {details}", fg="red")
+            sys.exit(1)
+
+
 @cli.group()
 def project() -> None:
     """Create, open, and inspect MovieForge projects."""
@@ -217,6 +305,27 @@ def benchmark(ctx: click.Context) -> None:
         click.echo(f"  Blender Reserve:    {profile.blender_reserve_mb} MB")
         click.echo(f"  Model Safe Budget:  {profile.model_budget_mb} MB")
         click.echo(f"  Max Heavy GPU Jobs: {profile.max_heavy_gpu_jobs}")
+
+
+@cli.command()
+@click.option("--prompt", "-p", required=True, help="Creative prompt for autonomous mini-film production.")
+@click.option("--project-name", default="MiniFilm_Robot", help="Name of project to create.")
+@click.pass_context
+def produce(ctx: click.Context, prompt: str, project_name: str) -> None:
+    """Executes the complete autonomous production pipeline (GEMINI.md Section 146)."""
+    as_json = ctx.obj.get("JSON", False)
+    mgr = ProjectManager()
+    p_id = project_name.lower().replace(" ", "_")
+    p_path = mgr.projects_root / p_id
+    if not p_path.exists():
+        p_path = mgr.create_project(name=project_name, project_id=p_id)
+    click.echo(f"Active production workspace at: {p_path}")
+
+    from agent.director.master_agent import MasterDirectorAgent
+    agent = MasterDirectorAgent(project_root=p_path)
+    res = agent.run_production(prompt=prompt, project_id=p_id)
+    if as_json:
+        print(json.dumps(res, indent=2))
 
 
 if __name__ == "__main__":

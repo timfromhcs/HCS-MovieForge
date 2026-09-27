@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "models": {
+    "stt.whisper.base": {
+      "model_id": "stt.whisper.base",
+      "repo": "ggerganov/whisper.cpp",
+      "revision": "5359861c739e955e79d9a303bcbc70fb988958b1",
+      "installed_at": "2026-09-26T23:02:11.076723+00:00",
+      "files": {
+        "ggml-base.bin": "models\\stt_whisper_base\\ggml-base.bin"
+      },
+      "sha256": {
+        "ggml-base.bin": "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe"
+      },
+      "status": "VERIFIED_ACTIVE"
+    },
+    "image.bonsai.flux2-klein.q2k": {
+      "model_id": "image.bonsai.flux2-klein.q2k",
+      "repo": "Aatricks/bonsai-image-ternary-4B-FLUX2-klein-GGUF",
+      "revision": "8a0fb8cca1650395f0c77f9fd3a7aacd80f92bf2",
+      "installed_at": "2026-09-26T23:04:41.977194+00:00",
+      "files": {
+        "bonsai-flux2-klein-ternary-q2_k.gguf": "models\\image_bonsai_flux2-klein_q2k\\bonsai-flux2-klein-ternary-q2_k.gguf"
+      },
+      "sha256": {
+        "bonsai-flux2-klein-ternary-q2_k.gguf": "409a9db80c65d2c5b24f62a2fe0f4b3afc0e47965de9a29a7fe4614713398500"
+      },
+      "status": "VERIFIED_ACTIVE"
+    },
+    "vae.flux2.dev": {
+      "model_id": "vae.flux2.dev",
+      "repo": "Comfy-Org/flux2-klein-4B",
+      "revision": "5f526678002e43af5551dadb73ce2e8c91b43afe",
+      "installed_at": "2026-09-26T23:07:23.076980+00:00",
+      "files": {
+        "split_files/vae/flux2-vae.safetensors": "models\\vae_flux2_dev\\split_files\\vae\\flux2-vae.safetensors"
+      },
+      "sha256": {
+        "split_files/vae/flux2-vae.safetensors": "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3"
+      },
+      "status": "VERIFIED_ACTIVE"
+    },
+    "te.qwen3.4b.q2k": {
+      "model_id": "te.qwen3.4b.q2k",
+      "repo": "unsloth/Qwen3-4B-GGUF",
+      "revision": "22c9fc8a8c7700b76a1789366280a6a5a1ad1120",
+      "installed_at": "2026-09-26T23:10:17.136819+00:00",
+      "files": {
+        "Qwen3-4B-Q2_K.gguf": "models\\te_qwen3_4b_q2k\\Qwen3-4B-Q2_K.gguf"
+      },
+      "sha256": {
+        "Qwen3-4B-Q2_K.gguf": "a5f2398927fa06fe12074aa39086004300185b82de53a1d2623b0f015e3881b0"
+      },
+      "status": "VERIFIED_ACTIVE"
+    },
+    "3d.trellis2.q4": {
+      "model_id": "3d.trellis2.q4",
+      "repo": "ilintar/trellis2-gguf",
+      "revision": "a57397bd3d351599d9729fc144b3f87c3f87d65b",
+      "installed_at": "2026-09-26T23:19:20.251798+00:00",
+      "files": {
+        "q4/dinov3.gguf": "models\\3d_trellis2_q4\\q4\\dinov3.gguf",
+        "q4/shape_flow_512.gguf": "models\\3d_trellis2_q4\\q4\\shape_flow_512.gguf",
+        "q4/shape_dec.gguf": "models\\3d_trellis2_q4\\q4\\shape_dec.gguf",
+        "q4/ss_flow.gguf": "models\\3d_trellis2_q4\\q4\\ss_flow.gguf",
+        "q4/ss_dec.gguf": "models\\3d_trellis2_q4\\q4\\ss_dec.gguf",
+        "q4/tex_flow_512.gguf": "models\\3d_trellis2_q4\\q4\\tex_flow_512.gguf",
+        "q4/tex_dec.gguf": "models\\3d_trellis2_q4\\q4\\tex_dec.gguf"
+      },
+      "sha256": {
+        "q4/dinov3.gguf": "6473cf96fd275bf84f5cc0556975a2abaa10b641e4a07101dcad561df1917ef2",
+        "q4/shape_flow_512.gguf": "de7b87a92280035258c94314258e3b8314de39e5f001eac1ada0b4087785fb63",
+        "q4/shape_dec.gguf": "79a52ddfed3454f724683940c11cfbfcf76c427ab3b7fdeb4c3cfc6d26647de4",
+        "q4/ss_flow.gguf": "a43c6393ee4a763a03e382de750d4f62752bacf969940442fd856230e62b88c2",
+        "q4/ss_dec.gguf": "2790b5eecb261cc877d9bf175ce2bd6dd48cd65be8c042c5f5bc023dfca01cf7",
+        "q4/tex_flow_512.gguf": "fff7bca6418ad607b8b9ff24034ff63f591d0a9b72f308960bffd6f5cd17390b",
+        "q4/tex_dec.gguf": "20b208e402db907c6800dd4ad486a0d6e927e4511a6ff87fb51049794988927b"
+      },
+      "status": "VERIFIED_ACTIVE"
+    },
+    "voice.piper.en_lessac_medium": {
+      "model_id": "voice.piper.en_lessac_medium",
+      "repo": "rhasspy/piper-voices",
+      "revision": "main",
+      "installed_at": "2026-09-27T01:13:51.470995+00:00",
+      "files": {
+        "en/en_US/lessac/medium/en_US-lessac-medium.onnx": "models\\voice_piper_en_lessac_medium\\en\\en_US\\lessac\\medium\\en_US-lessac-medium.onnx",
+        "en/en_US/lessac/medium/en_US-lessac-medium.onnx.json": "models\\voice_piper_en_lessac_medium\\en\\en_US\\lessac\\medium\\en_US-lessac-medium.onnx.json"
+      },
+      "sha256": {
+        "en/en_US/lessac/medium/en_US-lessac-medium.onnx": "5efe09e69902187827af646e1a6e9d269dee769f9877d17b16b1b46eeaaf019f",
+        "en/en_US/lessac/medium/en_US-lessac-medium.onnx.json": "efe19c417bed055f2d69908248c6ba650fa135bc868b0e6abb3da181dab690a0"
+      },
+      "status": "VERIFIED_ACTIVE"
+    },
+    "agent.qwen3-vl.8b.q4km": {
+      "model_id": "agent.qwen3-vl.8b.q4km",
+      "repo": "Qwen/Qwen3-VL-8B-Instruct-GGUF",
+      "revision": "f982a07559d4a2f6c8744d840bf6fccab30eea96",
+      "installed_at": "2026-09-27T01:14:11.297756+00:00",
+      "files": {
+        "Qwen3VL-8B-Instruct-Q4_K_M.gguf": "models\\agent_qwen3-vl_8b_q4km\\Qwen3VL-8B-Instruct-Q4_K_M.gguf",
+        "mmproj-Qwen3VL-8B-Instruct-F16.gguf": "models\\agent_qwen3-vl_8b_q4km\\mmproj-Qwen3VL-8B-Instruct-F16.gguf"
+      },
+      "sha256": {
+        "Qwen3VL-8B-Instruct-Q4_K_M.gguf": "67d1659bfe71b89d50b45a4ad1a9e5b997e5bb16ce5da66a6a6167abd569e9e2",
+        "mmproj-Qwen3VL-8B-Instruct-F16.gguf": "ca524100ebf825c9a870db1c580d03879e0da0ab2541697e2458e64891cf9d38"
+      },
+      "status": "VERIFIED_ACTIVE"
+    }
+  }
+}

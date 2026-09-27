@@ -1,0 +1,33 @@
+{
+  "id": "te.qwen3.4b.q2k",
+  "name": "Qwen3 4B Text Encoder Q2_K GGUF",
+  "source": {
+    "type": "huggingface",
+    "repo": "unsloth/Qwen3-4B-GGUF",
+    "revision": "22c9fc8a8c7700b76a1789366280a6a5a1ad1120"
+  },
+  "files": [
+    "Qwen3-4B-Q2_K.gguf"
+  ],
+  "sha256": {
+    "Qwen3-4B-Q2_K.gguf": "a5f2398927fa06fe12074aa39086004300185b82de53a1d2623b0f015e3881b0"
+  },
+  "size_bytes": {
+    "Qwen3-4B-Q2_K.gguf": 1669500192
+  },
+  "role": "text_encoder",
+  "backend": "stable-diffusion.cpp",
+  "compute": "cpu",
+  "memory": {
+    "estimated_ram_mb": 1800,
+    "estimated_vram_mb": 0,
+    "is_heavy_gpu": false
+  },
+  "capabilities": [
+    "text-conditioning"
+  ],
+  "verification": {
+    "upstream_verified": true,
+    "local_verified": false
+  }
+}
