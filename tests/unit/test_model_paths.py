@@ -7,7 +7,8 @@ from engine.model_manager.manager import ModelManager
 
 def test_resolve_relative_posix(tmp_path: Path) -> None:
     mgr = ModelManager(models_dir=tmp_path / "models")
-    assert mgr.resolve_locked_path("stt_whisper_base/ggml-base.bin") == tmp_path / "models" / "stt_whisper_base" / "ggml-base.bin"
+    expected = tmp_path / "models" / "stt_whisper_base" / "ggml-base.bin"
+    assert mgr.resolve_locked_path("stt_whisper_base/ggml-base.bin") == expected
 
 
 def test_resolve_legacy_windows_absolute(tmp_path: Path) -> None:
@@ -26,9 +27,11 @@ def test_resolve_legacy_windows_backslash_relative(tmp_path: Path) -> None:
 def test_resolve_nested_posix(tmp_path: Path) -> None:
     mgr = ModelManager(models_dir=tmp_path / "models")
     stored = "vae_flux2_dev/split_files/vae/flux2-vae.safetensors"
-    assert mgr.resolve_locked_path(stored) == tmp_path / "models" / "vae_flux2_dev" / "split_files" / "vae" / "flux2-vae.safetensors"
+    expected = tmp_path / "models" / "vae_flux2_dev" / "split_files" / "vae" / "flux2-vae.safetensors"
+    assert mgr.resolve_locked_path(stored) == expected
 
 
 def test_resolve_posix_with_models_prefix(tmp_path: Path) -> None:
     mgr = ModelManager(models_dir=tmp_path / "models")
-    assert mgr.resolve_locked_path("models/stt_whisper_base/ggml-base.bin") == tmp_path / "models" / "stt_whisper_base" / "ggml-base.bin"
+    expected = tmp_path / "models" / "stt_whisper_base" / "ggml-base.bin"
+    assert mgr.resolve_locked_path("models/stt_whisper_base/ggml-base.bin") == expected
