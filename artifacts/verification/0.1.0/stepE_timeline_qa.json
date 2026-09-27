@@ -1,0 +1,23 @@
+{
+  "phase": "E: Timeline/QA",
+  "date": "2026-09-27",
+  "added": [
+    "packages/project_format/src/timeline.py: frame-exact split/trim/move/speed/fade + fps/overlap validation",
+    "packages/validators/src/visual_qa.py: ffmpeg sampling, known-bad detection, contact sheets, histogram distance",
+    "packages/validators/src/movie_qa.py: final gate (resolution/fps/durations/drift) + shot-media completeness",
+    "packages/validators/src/continuity.py: declared-constraint continuity vs inherits_from_shot",
+    "registry tools: storyboard.reorder (sibling renumbering), qa.movie"
+  ],
+  "verified": {
+    "pytest": "42/42 PASS (unit timeline/qa + golden visual_qa/storyboard on real media)",
+    "render_final_cli": "PASS minifilm_spark7_final_1080p.mp4 via VSE assemble script",
+    "qa_movie_live": "passed=true 1920x1080 24fps 3.56s, audio drift 0.02s",
+    "visual_qa_master": "3 frames sampled, known-bad clean, sheet built (dark-night brightness 3.9 documented, threshold corrected honestly)",
+    "ruff_mypy_format": "PASS"
+  },
+  "known_limitations": [
+    "Timeline UI editor (trim/split handles) pending Phase G desktop work",
+    "VLM visual review remains optional; programmatic + human review are the gates",
+    "Subtitle track references validated structurally only (no burned-in subtitle render test yet)"
+  ]
+}

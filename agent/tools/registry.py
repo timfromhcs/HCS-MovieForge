@@ -286,6 +286,41 @@ class ToolRegistry:
             handler=self._tool_lipsync_create,
         )
 
+        # 13b. storyboard.reorder (manual card reorder as versioned mutation)
+        self.register_tool(
+            name="storyboard.reorder",
+            description="Move a shot to a new position inside its scene (renumbers siblings).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "scene_id": {"type": "string"},
+                    "shot_id": {"type": "string"},
+                    "new_position": {"type": "integer", "minimum": 1},
+                },
+                "required": ["project_id", "scene_id", "shot_id", "new_position"],
+            },
+            handler=self._tool_storyboard_reorder,
+        )
+
+        # 13c. qa.movie (programmatic final gate over video + audio)
+        self.register_tool(
+            name="qa.movie",
+            description="Run the programmatic final-movie QA gate (resolution/fps/durations).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "video_path": {"type": "string"},
+                    "audio_path": {"type": "string"},
+                    "width": {"type": "integer", "default": 1920},
+                    "height": {"type": "integer", "default": 1080},
+                    "fps": {"type": "integer", "default": 24},
+                },
+                "required": ["video_path"],
+            },
+            handler=self._tool_qa_movie,
+        )
+
         # 13. music.generate (honest gate: EXPERIMENTAL until acestep.cpp staged)
         self.register_tool(
             name="music.generate",
@@ -742,6 +777,40 @@ class ToolRegistry:
             metadata={"viseme_frames": len(timeline), "method": "rms_energy_baseline"},
         )
         return {"status": "ok", "artifact_id": rec.artifact_id, "path": str(out_path), "frames": len(timeline)}
+
+    def _tool_storyboard_reorder(self, **kwargs) -> dict[str, Any]:
+        project_id, scene_id, shot_id, pos = (
+            kwargs["project_id"],
+            kwargs["scene_id"],
+            kwargs["shot_id"],
+            int(kwargs["new_position"]),
+        )
+        with self.db.get_connection() as conn:
+            rows = conn.execute(
+                "SELECT shot_id FROM shots WHERE project_id = ? AND scene_id = ? ORDER BY shot_number ASC",
+                (project_id, scene_id),
+            ).fetchall()
+            order = [r["shot_id"] for r in rows]
+            if shot_id not in order:
+                return {"status": "error", "message": f"shot {shot_id} not in scene {scene_id}"}
+            order.remove(shot_id)
+            order.insert(max(0, min(pos - 1, len(order))), shot_id)
+            for i, sid in enumerate(order, start=1):
+                conn.execute("UPDATE shots SET shot_number = ? WHERE shot_id = ?", (i, sid))
+            conn.commit()
+        return {"status": "ok", "order": order}
+
+    def _tool_qa_movie(self, **kwargs) -> dict[str, Any]:
+        from packages.validators.src.movie_qa import qa_movie
+
+        verdict = qa_movie(
+            kwargs["video_path"],
+            kwargs.get("audio_path"),
+            kwargs.get("width", 1920),
+            kwargs.get("height", 1080),
+            kwargs.get("fps", 24),
+        )
+        return {"status": "ok" if verdict["passed"] else "error", **verdict}
 
     def _tool_music_generate(self, **kwargs) -> dict[str, Any]:
         return {
