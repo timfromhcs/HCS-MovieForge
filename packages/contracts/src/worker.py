@@ -55,6 +55,7 @@ class WorkerRequest(BaseModel):
     task_type: str
     parameters: dict[str, Any] = Field(default_factory=dict)
     input_artifacts: list[str] = Field(default_factory=list)
+    priority: int = 20
 
 
 class WorkerResponse(BaseModel):

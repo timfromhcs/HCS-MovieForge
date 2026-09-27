@@ -1,0 +1,40 @@
+{
+  "phase": "B: Foundation geschlossen",
+  "date": "2026-09-27",
+  "added": [
+    "engine/resource_manager: UMA budgets from live probe, hardware-profile persist, PID-pruned heavy-GPU leases, RAM-gated acquire",
+    "engine/cache_manager: byte-accurate bounded LRU, pin/unpin, orphan cleanup, tmp staging",
+    "CLI test smoke/integration/stress/soak (stress/soak BLOCKED exit-2 until Phase F suites exist)",
+    "CLI render preview (newest GLB via Blender turntable script) + render final (VSE assemble script)",
+    "CLI server start/stop (supervisor pid + service-state.json, zero children = truth until API in G)",
+    "CLI release verify (git diff-check, worktree, README, model-lock, pytest, ruff)",
+    "CLI project open/save(snapshot)/export(zip+sha256)",
+    "CLI benchmark --save/--hdd (sequential RW + model cold/warm 64MB reads)",
+    "doctor --offline now verifies all locked model files exist on disk",
+    "WorkerRequest.priority typed (was silently dropped extra kwarg); logger dict typing fixed"
+  ],
+  "verified": {
+    "ruff_check": "PASS",
+    "ruff_format": "PASS (69 files)",
+    "mypy": "PASS on 25 files (contracts, managers, scheduler, CLI, agent, telemetry, project_format)",
+    "pytest": "20/20 PASS (12 alt + 8 neu resource/cache)",
+    "doctor_offline": "READY, 7 locked models present",
+    "test_smoke": "PASS",
+    "project_open_save_export": "PASS (snapshot + dist zip sha256=81238d0a...)",
+    "server_start_stop": "PASS (pid + service-state RUNNING/STOPPED)",
+    "render_preview": "PASS (spark7_mesh_preview.png 1080x1080 valid, distinct hash vs turntable)"
+  },
+  "measurements": {
+    "seq_write_mbs": 67.9,
+    "seq_read_mbs": 3107.1,
+    "read_note": "READ CACHE-INFLATED: just-written file served from OS page cache, not raw HDD seek; honest sequential-cache number, not spindle speed",
+    "model_cold_64mb_sec": 0.02,
+    "model_warm_64mb_sec": 0.02,
+    "model_note": "both 0.02s: 4.9GB Qwen file already page-cached from earlier harness runs; true cold HDD time UNKNOWN until reboot-cleared test"
+  },
+  "known_limitations": [
+    "render final not yet re-run via CLI (assemble path proven via produce pipeline only)",
+    "release verify worktree_clean gate correctly FAILS while work uncommitted (by design)",
+    "stress/soak honestly BLOCKED until Phase F"
+  ]
+}
