@@ -133,6 +133,7 @@ class ToolRegistry:
                     "output_filename": {"type": "string"},
                     "resolution": {"type": "integer", "default": 512},
                     "steps": {"type": "integer", "default": 1},
+                    "seed": {"type": "integer", "default": 42},
                 },
                 "required": ["project_id", "image_path"],
             },
@@ -479,6 +480,7 @@ class ToolRegistry:
         out_name = kwargs.get("output_filename") or f"mesh_{os.urandom(4).hex()}.glb"
         resolution = kwargs.get("resolution", 512)
         steps = kwargs.get("steps", 1)
+        seed = kwargs.get("seed", 42)
 
         out_path = self.project_root / "props" / out_name
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -493,6 +495,7 @@ class ToolRegistry:
                 "output_glb": str(out_path),
                 "resolution": resolution,
                 "steps": steps,
+                "seed": seed,
                 "backend": "CPU",
                 "box_uv": True,
                 "no_texture": True,
@@ -510,7 +513,7 @@ class ToolRegistry:
             producer_version="0.8.1",
             model_id="3d.trellis2.q4",
             canonical=True,
-            metadata={"resolution": resolution, "steps": steps},
+            metadata={"resolution": resolution, "steps": steps, "seed": seed},
         )
         return {
             "status": "ok",

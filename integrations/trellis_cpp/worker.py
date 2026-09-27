@@ -93,6 +93,7 @@ class TrellisWorker(BaseWorker):
         backend = params.get("backend", "CPU")
         box_uv = params.get("box_uv", True)
         no_texture = params.get("no_texture", False)
+        seed = params.get("seed", 42)
 
         cmd = [
             str(self.binary_path),
@@ -108,6 +109,8 @@ class TrellisWorker(BaseWorker):
             str(steps),
             "--backend",
             backend,
+            "-s",
+            str(seed),
         ]
 
         if box_uv:
