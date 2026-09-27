@@ -2,8 +2,6 @@
 
 import sqlite3
 from pathlib import Path
-from typing import Any
-
 
 MIGRATION_V1 = """
 PRAGMA journal_mode = WAL;
@@ -167,7 +165,10 @@ class ProjectDB:
     def _init_db(self) -> None:
         with self.get_connection() as conn:
             # Check current version
-            conn.execute("CREATE TABLE IF NOT EXISTS schema_versions (version INTEGER PRIMARY KEY, applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);")
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS schema_versions "
+                "(version INTEGER PRIMARY KEY, applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
+            )
             cursor = conn.execute("SELECT MAX(version) FROM schema_versions;")
             row = cursor.fetchone()
             curr_ver = row[0] or 0

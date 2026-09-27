@@ -1,12 +1,13 @@
 """Model registry, headless downloader, hash verification, and atomic staging manager."""
 
 import json
-import os
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
 from huggingface_hub import hf_hub_download
+
 from packages.validators.src.hash_validator import calculate_sha256
 
 
@@ -27,7 +28,7 @@ class ModelManager:
         manifests = []
         for file in self.manifests_dir.glob("*.json"):
             try:
-                with open(file, "r", encoding="utf-8") as f:
+                with open(file, encoding="utf-8") as f:
                     manifests.append(json.load(f))
             except Exception:
                 continue
@@ -44,7 +45,7 @@ class ModelManager:
         """Reads active model lock file."""
         if self.lock_file.exists():
             try:
-                with open(self.lock_file, "r", encoding="utf-8") as f:
+                with open(self.lock_file, encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
                 return {"version": 1, "models": {}}
@@ -131,7 +132,7 @@ class ModelManager:
             "model_id": model_id,
             "repo": repo_id,
             "revision": revision,
-            "installed_at": datetime.now(timezone.utc).isoformat(),
+            "installed_at": datetime.now(UTC).isoformat(),
             "files": promoted_files,
             "sha256": computed_hashes,
             "status": "VERIFIED_ACTIVE",

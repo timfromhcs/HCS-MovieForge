@@ -1,14 +1,12 @@
 """Master autonomous Director Agent executing the complete production lifecycle from prompt to 1080p master."""
 
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any
+
 from agent.tools.registry import ToolRegistry
 from engine.artifact_manager.manager import ArtifactManager
-from engine.project_manager.manager import ProjectManager
-from packages.contracts.src.artifact import ArtifactRecord
 from packages.project_format.src.db import ProjectDB
 from packages.validators.src.video_validator import validate_video
 
@@ -37,18 +35,26 @@ class MasterDirectorAgent:
         story_plan = {
             "project_id": project_id,
             "title": "Spark-7: The Rainy Station",
-            "logline": "A small maintenance robot inspects an empty, rain-swept train platform searching for track anomalies.",
+            "logline": (
+                "A small maintenance robot inspects an empty, rain-swept train platform searching for track anomalies."
+            ),
             "characters": [
                 {
                     "name": "Spark-7",
-                    "description": "A compact, three-wheeled maintenance robot with weathered yellow plating and a glowing blue optical sensor.",
+                    "description": (
+                        "A compact three-wheeled maintenance robot with weathered "
+                        "yellow plating and a glowing blue optical sensor."
+                    ),
                     "visual_style": "Industrial sci-fi, cinematic lighting, rain droplets on chassis",
                 }
             ],
             "locations": [
                 {
                     "name": "Platform 4B",
-                    "description": "An outdoor elevated transit platform at night under torrential rain, illuminated by neon sign reflections.",
+                    "description": (
+                        "An outdoor elevated transit platform at night under torrential "
+                        "rain, illuminated by neon sign reflections."
+                    ),
                     "time_of_day": "Night",
                     "weather": "Heavy rain",
                 }
@@ -72,8 +78,11 @@ class MasterDirectorAgent:
         production_manifest["steps"].append({"step": "story_create", "result": res_story})
 
         # ---------------- 2. IMAGE GENERATION (Bonsai FLUX.2 Klein) ----------------
-        print("[DIRECTOR: 2/8] Generating robot concept reference via Bonsai FLUX.2 Klein on Vulkan...", flush=True)
-        img_prompt = "a small industrial maintenance robot on a wet train station platform in the rain, cinematic neon lighting, detailed chassis, 8k"
+        print("[DIRECTOR: 2/8] Generating robot concept via Bonsai FLUX.2 Klein...", flush=True)
+        img_prompt = (
+            "a small industrial maintenance robot on a wet train station platform in the rain, "
+            "cinematic neon lighting, detailed chassis, 8k"
+        )
         res_img = self.tool_registry.execute(
             "image.generate",
             project_id=project_id,
@@ -103,6 +112,7 @@ class MasterDirectorAgent:
         print("[DIRECTOR: 4/8] Generating 3D mesh GLB via TRELLIS.2...", flush=True)
         # Prepare transparent alpha shape for reliable geometry extraction
         from PIL import Image, ImageDraw
+
         rgba_img_path = str(self.project_root / "images" / "spark7_matted.png")
         orig_img = Image.open(concept_img_path).convert("RGBA")
         mask = Image.new("L", orig_img.size, 0)

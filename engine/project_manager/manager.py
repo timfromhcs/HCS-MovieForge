@@ -1,10 +1,9 @@
 """Project manager coordinating project loading, persistence, snapshots, and recovery."""
 
 import json
-import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+
 from packages.project_format.src.db import ProjectDB
 from packages.project_format.src.project import (
     ProjectManifest,
@@ -31,7 +30,7 @@ class ProjectManager:
         if project_dir.exists():
             raise FileExistsError(f"Project directory already exists: {project_dir}")
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         manifest = ProjectManifest(
             name=name,
             project_id=project_id,
@@ -61,7 +60,7 @@ class ProjectManager:
             raise ValueError(f"Invalid project format at {p_dir}: {errors}")
 
         manifest_path = p_dir / "manifest.json"
-        with open(manifest_path, "r", encoding="utf-8") as f:
+        with open(manifest_path, encoding="utf-8") as f:
             data = json.load(f)
             manifest = ProjectManifest.model_validate(data)
 
@@ -78,13 +77,14 @@ class ProjectManager:
         snapshots_dir = p_dir / ".movieforge" / "snapshots"
         snapshots_dir.mkdir(parents=True, exist_ok=True)
 
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         snapshot_file = snapshots_dir / f"snapshot_{timestamp}_{reason}.db"
 
         db_path = p_dir / "movieforge.db"
         if db_path.exists():
             # Perform safe online SQLite backup
             import sqlite3
+
             src = sqlite3.connect(str(db_path))
             dst = sqlite3.connect(str(snapshot_file))
             with dst:
@@ -94,10 +94,14 @@ class ProjectManager:
 
         meta_path = snapshots_dir / f"snapshot_{timestamp}_{reason}.json"
         with open(meta_path, "w", encoding="utf-8") as f:
-            json.dump({
-                "timestamp": timestamp,
-                "reason": reason,
-                "snapshot_file": snapshot_file.name,
-            }, f, indent=2)
+            json.dump(
+                {
+                    "timestamp": timestamp,
+                    "reason": reason,
+                    "snapshot_file": snapshot_file.name,
+                },
+                f,
+                indent=2,
+            )
 
         return snapshot_file

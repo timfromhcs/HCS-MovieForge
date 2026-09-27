@@ -8,11 +8,11 @@ root = Path(__file__).resolve().parent.parent.parent
 if str(root) not in sys.path:
     sys.path.insert(0, str(root))
 
-from integrations.blender.worker import BlenderWorker
-from integrations.llama_cpp.worker import LlamaWorker
-from integrations.stable_diffusion_cpp.worker import StableDiffusionWorker
-from integrations.trellis_cpp.worker import TrellisWorker
-from integrations.whisper_cpp.worker import WhisperWorker
+from integrations.blender.worker import BlenderWorker  # noqa: E402
+from integrations.llama_cpp.worker import LlamaWorker  # noqa: E402
+from integrations.stable_diffusion_cpp.worker import StableDiffusionWorker  # noqa: E402
+from integrations.trellis_cpp.worker import TrellisWorker  # noqa: E402
+from integrations.whisper_cpp.worker import WhisperWorker  # noqa: E402
 
 workers = [
     BlenderWorker(),

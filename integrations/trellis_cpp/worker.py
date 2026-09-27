@@ -5,6 +5,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any
+
 from engine.workers.base import BaseWorker
 from packages.contracts.src.worker import (
     ServiceState,
@@ -17,7 +18,11 @@ from packages.validators.src.mesh_validator import validate_glb
 
 
 class TrellisWorker(BaseWorker):
-    def __init__(self, binary_path: Path | str = "bin/trellis-cpp/trellis-cli.exe", models_dir: Path | str = "models/3d_trellis2_q4"):
+    def __init__(
+        self,
+        binary_path: Path | str = "bin/trellis-cpp/trellis-cli.exe",
+        models_dir: Path | str = "models/3d_trellis2_q4",
+    ):
         super().__init__(worker_id="worker_trellis", backend_name="trellis.cpp", backend_version="0.8.1")
         self.binary_path = Path(binary_path).resolve()
         self.models_dir = Path(models_dir).resolve()
@@ -27,7 +32,7 @@ class TrellisWorker(BaseWorker):
         if not self.binary_path.exists():
             return {"status": "error", "message": f"Trellis binary not found at {self.binary_path}"}
         try:
-            res = subprocess.run([str(self.binary_path), "--help"], capture_output=True, text=True, timeout=5)
+            subprocess.run([str(self.binary_path), "--help"], capture_output=True, text=True, timeout=5)
             return {"status": "ok", "binary": str(self.binary_path)}
         except Exception as e:
             return {"status": "error", "message": str(e)}
@@ -91,12 +96,18 @@ class TrellisWorker(BaseWorker):
 
         cmd = [
             str(self.binary_path),
-            "--image", str(image_path),
-            "--output", str(output_glb),
-            "-m", str(models_p),
-            "--res", str(resolution),
-            "--steps", str(steps),
-            "--backend", backend,
+            "--image",
+            str(image_path),
+            "--output",
+            str(output_glb),
+            "-m",
+            str(models_p),
+            "--res",
+            str(resolution),
+            "--steps",
+            str(steps),
+            "--backend",
+            backend,
         ]
 
         if box_uv:
@@ -115,22 +126,28 @@ class TrellisWorker(BaseWorker):
                 # If Vulkan failed, attempt automatic CPU fallback if not already on CPU
                 if backend.upper() == "VULKAN":
                     cmd_cpu = [c if c != "Vulkan" else "CPU" for c in cmd]
-                    self._current_process = subprocess.Popen(cmd_cpu, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    stdout, stderr = self._current_process.communicate(timeout=params.get("timeout_sec", 600))
+                    self._current_process = subprocess.Popen(
+                        cmd_cpu, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                    )
+                    timeout = params.get("timeout_sec", 600)
+                    stdout, stderr = self._current_process.communicate(timeout=timeout)
                     duration = time.time() - start_time
                     if self._current_process.returncode != 0:
                         self.state = ServiceState.READY
                         return WorkerResponse(
                             status=ServiceState.READY,
                             job_id=request.job_id,
-                            error=f"trellis-cli execution failed on Vulkan and CPU fallback (code {self._current_process.returncode}): {stderr[-500:]}",
+                            error=(
+                                f"trellis-cli failed on Vulkan+CPU (code {self._current_process.returncode}): "
+                                f"{stderr[-500:]}"
+                            ),
                         )
                 else:
                     self.state = ServiceState.READY
                     return WorkerResponse(
                         status=ServiceState.READY,
                         job_id=request.job_id,
-                        error=f"trellis-cli execution failed (code {self._current_process.returncode}): {stderr[-500:]}",
+                        error=(f"trellis-cli failed (code {self._current_process.returncode}): {stderr[-500:]}"),
                     )
 
             # Validate generated GLB
@@ -154,13 +171,15 @@ class TrellisWorker(BaseWorker):
             return WorkerResponse(
                 status=ServiceState.READY,
                 job_id=request.job_id,
-                artifacts=[{
-                    "path": output_glb,
-                    "kind": "MESH_RAW",
-                    "vertex_count": val_res.vertex_count,
-                    "face_count": val_res.face_count,
-                    "producer": "trellis.cpp",
-                }],
+                artifacts=[
+                    {
+                        "path": output_glb,
+                        "kind": "MESH_RAW",
+                        "vertex_count": val_res.vertex_count,
+                        "face_count": val_res.face_count,
+                        "producer": "trellis.cpp",
+                    }
+                ],
                 telemetry=telemetry,
             )
 

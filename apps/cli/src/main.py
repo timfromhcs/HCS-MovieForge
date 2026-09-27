@@ -6,16 +6,18 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 # Ensure project root is on sys.path
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-import click
-from engine.model_manager.manager import ModelManager
-from engine.project_manager.manager import ProjectManager
-from packages.telemetry.src.probe import probe_hardware, probe_vulkan
+import click  # noqa: E402
+
+from engine.model_manager.manager import ModelManager  # noqa: E402
+from engine.project_manager.manager import ProjectManager  # noqa: E402
+from packages.telemetry.src.probe import probe_hardware, probe_vulkan  # noqa: E402
 
 
 @click.group()
@@ -69,10 +71,16 @@ def doctor(ctx: click.Context, offline: bool) -> None:
 
     # Check CMake & Ninja
     cmake_path = shutil.which("cmake")
-    checks["cmake"] = {"status": "ok" if cmake_path else "warning", "message": "cmake found" if cmake_path else "cmake missing"}
+    checks["cmake"] = {
+        "status": "ok" if cmake_path else "warning",
+        "message": "cmake found" if cmake_path else "cmake missing",
+    }
 
     ninja_path = shutil.which("ninja")
-    checks["ninja"] = {"status": "ok" if ninja_path else "warning", "message": "ninja found" if ninja_path else "ninja missing"}
+    checks["ninja"] = {
+        "status": "ok" if ninja_path else "warning",
+        "message": "ninja found" if ninja_path else "ninja missing",
+    }
 
     # Check FFmpeg & ffprobe
     ffmpeg_path = shutil.which("ffmpeg")
@@ -108,11 +116,11 @@ def doctor(ctx: click.Context, offline: bool) -> None:
         checks["vulkan"] = {"status": "warning", "message": "Vulkan device details could not be probed"}
 
     # Check AI Engine Backends
+    from integrations.llama_cpp.worker import LlamaWorker
+    from integrations.piper.worker import PiperWorker
     from integrations.stable_diffusion_cpp.worker import StableDiffusionWorker
     from integrations.trellis_cpp.worker import TrellisWorker
-    from integrations.llama_cpp.worker import LlamaWorker
     from integrations.whisper_cpp.worker import WhisperWorker
-    from integrations.piper.worker import PiperWorker
 
     for name, worker in [
         ("sd.cpp", StableDiffusionWorker()),
@@ -169,13 +177,15 @@ def models_list(ctx: click.Context) -> None:
     for m in manifests:
         m_id = m.get("id")
         is_inst = m_id in installed
-        results.append({
-            "id": m_id,
-            "name": m.get("name"),
-            "role": m.get("role"),
-            "backend": m.get("backend"),
-            "installed": is_inst,
-        })
+        results.append(
+            {
+                "id": m_id,
+                "name": m.get("name"),
+                "role": m.get("role"),
+                "backend": m.get("backend"),
+                "installed": is_inst,
+            }
+        )
 
     if as_json:
         print(json.dumps(results, indent=2))
@@ -229,6 +239,7 @@ def models_verify(ctx: click.Context, model_id: str) -> None:
         sys.exit(1)
 
     from packages.validators.src.hash_validator import verify_sha256
+
     files = installed.get("files", {})
     expected_hashes = manifest.get("sha256", {})
 
@@ -297,7 +308,9 @@ def benchmark(ctx: click.Context) -> None:
         click.echo("       HCS MovieForge - Hardware Profile")
         click.echo("========================================")
         click.echo(f"CPU: {profile.cpu_name} ({profile.cpu_cores} Cores / {profile.cpu_threads} Threads)")
-        click.echo(f"RAM: {profile.system_memory.total_ram_mb} MB Total, {profile.system_memory.available_ram_mb} MB Available")
+        click.echo(
+            f"RAM: {profile.system_memory.total_ram_mb} MB Total, {profile.system_memory.available_ram_mb} MB Available"
+        )
         click.echo(f"Vulkan: {profile.vulkan_device.device_name} (API {profile.vulkan_device.api_version})")
         click.echo(f"Storage: {profile.storage.free_gb} GB Free on {profile.storage.path}")
         click.echo("Safe UMA Memory Budgets:")
@@ -322,6 +335,7 @@ def produce(ctx: click.Context, prompt: str, project_name: str) -> None:
     click.echo(f"Active production workspace at: {p_path}")
 
     from agent.director.master_agent import MasterDirectorAgent
+
     agent = MasterDirectorAgent(project_root=p_path)
     res = agent.run_production(prompt=prompt, project_id=p_id)
     if as_json:

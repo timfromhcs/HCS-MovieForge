@@ -2,9 +2,9 @@
 
 import json
 import uuid
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any
+
 from packages.contracts.src.job import (
     JobPriority,
     JobRecord,
@@ -36,7 +36,7 @@ class JobScheduler:
     ) -> JobRecord:
         """Enqueues a new durable job into SQLite WAL queue."""
         job_id = f"job_{uuid.uuid4().hex[:12]}"
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         res_est = resource_estimate or ResourceEstimate()
 
         job = JobRecord(
@@ -104,17 +104,16 @@ class JobScheduler:
             return self._row_to_job(row)
 
     def get_next_job(self, currently_active_model: str | None = None) -> JobRecord | None:
-        """Picks the next eligible job, applying priority and locality-aware reordering without violating dependencies."""
+        """Pick next eligible job with locality-aware order, keeping dependencies intact."""
         with self.db.get_connection() as conn:
             # Check currently running heavy GPU jobs count
-            cursor = conn.execute(
-                "SELECT COUNT(*) as count FROM jobs WHERE status = 'RUNNING'"
-            )
+            cursor = conn.execute("SELECT COUNT(*) as count FROM jobs WHERE status = 'RUNNING'")
             running_count = cursor.fetchone()["count"]
 
-            # Fetch all candidate queued jobs ordered by priority descending, creation ascending
+            # Fetch candidates ordered by priority desc, creation asc
             cursor = conn.execute(
-                "SELECT * FROM jobs WHERE status IN ('QUEUED', 'WAITING_RESOURCE') ORDER BY priority DESC, created_at ASC"
+                "SELECT * FROM jobs WHERE status IN ('QUEUED', 'WAITING_RESOURCE') "
+                "ORDER BY priority DESC, created_at ASC"
             )
             rows = cursor.fetchall()
             if not rows:
@@ -163,7 +162,7 @@ class JobScheduler:
         error: StructuredError | None = None,
     ) -> None:
         """Transitions job state safely."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self.db.get_connection() as conn:
             updates = ["status = ?", "updated_at = ?"]
             params: list[Any] = [status.value, now]
@@ -191,7 +190,8 @@ class JobScheduler:
             conn.commit()
 
     def _row_to_job(self, row: Any) -> JobRecord:
-        res_est = ResourceEstimate.model_validate_json(row["resource_estimate"]) if row["resource_estimate"] else ResourceEstimate()
+        raw_est = row["resource_estimate"]
+        res_est = ResourceEstimate.model_validate_json(raw_est) if raw_est else ResourceEstimate()
         err = StructuredError.model_validate_json(row["error"]) if row["error"] else None
         return JobRecord(
             job_id=row["job_id"],

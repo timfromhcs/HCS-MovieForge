@@ -2,12 +2,12 @@
 
 import json
 import mimetypes
-import os
 import shutil
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
 from packages.contracts.src.artifact import ArtifactKind, ArtifactRecord, QAStatus
 from packages.project_format.src.db import ProjectDB
 from packages.validators.src.hash_validator import calculate_sha256
@@ -59,7 +59,7 @@ class ArtifactManager:
             mime = "application/octet-stream"
 
         artifact_id = f"art_{uuid.uuid4().hex[:12]}"
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         record = ArtifactRecord(
             artifact_id=artifact_id,
@@ -150,7 +150,7 @@ class ArtifactManager:
         if not p.exists():
             return p
 
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         dest = self.trash_dir / f"{timestamp}_{p.name}"
         shutil.move(str(p), str(dest))
 

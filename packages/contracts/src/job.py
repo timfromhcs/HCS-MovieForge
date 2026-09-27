@@ -1,12 +1,13 @@
 """Job contracts and state models for HCS MovieForge."""
 
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import Enum, StrEnum
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     CREATED = "CREATED"
     QUEUED = "QUEUED"
     WAITING_RESOURCE = "WAITING_RESOURCE"
@@ -42,7 +43,7 @@ class StructuredError(BaseModel):
     error_class: str
     message: str
     details: dict[str, Any] = Field(default_factory=dict)
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     recoverable: bool = False
 
 
@@ -60,8 +61,8 @@ class JobRecord(BaseModel):
     retry_count: int = 0
     max_retries: int = 2
     resource_estimate: ResourceEstimate = Field(default_factory=ResourceEstimate)
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     started_at: str | None = None
     completed_at: str | None = None
     parent_job: str | None = None

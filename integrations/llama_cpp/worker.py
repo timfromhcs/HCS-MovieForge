@@ -5,6 +5,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any
+
 from engine.workers.base import BaseWorker
 from packages.contracts.src.worker import (
     ServiceState,
@@ -95,13 +96,19 @@ class LlamaWorker(BaseWorker):
 
         cmd = [
             str(exec_bin),
-            "-m", str(model_file),
-            "-p", prompt,
-            "-c", str(ctx_size),
-            "-n", str(max_tokens),
-            "--temp", str(temp),
+            "-m",
+            str(model_file),
+            "-p",
+            prompt,
+            "-c",
+            str(ctx_size),
+            "-n",
+            str(max_tokens),
+            "--temp",
+            str(temp),
             "--no-warmup",
-            "-ngl", str(n_gpu_layers),
+            "-ngl",
+            str(n_gpu_layers),
         ]
 
         if is_multimodal:
@@ -117,11 +124,15 @@ class LlamaWorker(BaseWorker):
                 return WorkerResponse(
                     status=ServiceState.READY,
                     job_id=request.job_id,
-                    error=f"llama execution failed (code {self._current_process.returncode}): {stderr[-500:]}",
+                    error=(f"llama failed (code {self._current_process.returncode}): {stderr[-500:]}"),
                 )
 
             # Extract clean output text (filter debug log lines)
-            clean_lines = [line for line in stdout.splitlines() if not line.startswith("<") and not line.startswith("0.") and line.strip()]
+            clean_lines = [
+                line
+                for line in stdout.splitlines()
+                if not line.startswith("<") and not line.startswith("0.") and line.strip()
+            ]
             response_text = "\n".join(clean_lines).strip()
 
             telemetry = WorkerTelemetry(

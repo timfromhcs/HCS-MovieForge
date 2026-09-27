@@ -5,6 +5,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any
+
 from engine.workers.base import BaseWorker
 from packages.contracts.src.worker import (
     ServiceState,
@@ -17,8 +18,16 @@ from packages.validators.src.image_validator import validate_image
 
 
 class StableDiffusionWorker(BaseWorker):
-    def __init__(self, binary_path: Path | str = "bin/stable-diffusion-cpp/sd-cli.exe", models_dir: Path | str = "models"):
-        super().__init__(worker_id="worker_stable_diffusion", backend_name="stable-diffusion.cpp", backend_version="master-920")
+    def __init__(
+        self,
+        binary_path: Path | str = "bin/stable-diffusion-cpp/sd-cli.exe",
+        models_dir: Path | str = "models",
+    ):
+        super().__init__(
+            worker_id="worker_stable_diffusion",
+            backend_name="stable-diffusion.cpp",
+            backend_version="master-920",
+        )
         self.binary_path = Path(binary_path).resolve()
         self.models_dir = Path(models_dir).resolve()
         self._current_process: subprocess.Popen | None = None
@@ -27,7 +36,7 @@ class StableDiffusionWorker(BaseWorker):
         if not self.binary_path.exists():
             return {"status": "error", "message": f"sd-cli binary not found at {self.binary_path}"}
         try:
-            res = subprocess.run([str(self.binary_path), "--help"], capture_output=True, text=True, timeout=5)
+            subprocess.run([str(self.binary_path), "--help"], capture_output=True, text=True, timeout=5)
             return {"status": "ok", "binary": str(self.binary_path)}
         except Exception as e:
             return {"status": "error", "message": str(e)}
@@ -106,14 +115,22 @@ class StableDiffusionWorker(BaseWorker):
         if is_flux2:
             cmd = [
                 str(self.binary_path),
-                "--diffusion-model", str(model_file),
-                "-p", prompt,
-                "-o", str(output_image),
-                "-W", str(width),
-                "-H", str(height),
-                "--steps", str(steps),
-                "--cfg-scale", str(cfg_scale),
-                "-s", str(seed),
+                "--diffusion-model",
+                str(model_file),
+                "-p",
+                prompt,
+                "-o",
+                str(output_image),
+                "-W",
+                str(width),
+                "-H",
+                str(height),
+                "--steps",
+                str(steps),
+                "--cfg-scale",
+                str(cfg_scale),
+                "-s",
+                str(seed),
                 "--offload-to-cpu",
                 "--diffusion-fa",
                 "--vae-tiling",
@@ -125,14 +142,22 @@ class StableDiffusionWorker(BaseWorker):
         else:
             cmd = [
                 str(self.binary_path),
-                "-m", str(model_file),
-                "-p", prompt,
-                "-o", str(output_image),
-                "-W", str(width),
-                "-H", str(height),
-                "--steps", str(steps),
-                "--cfg-scale", str(cfg_scale),
-                "-s", str(seed),
+                "-m",
+                str(model_file),
+                "-p",
+                prompt,
+                "-o",
+                str(output_image),
+                "-W",
+                str(width),
+                "-H",
+                str(height),
+                "--steps",
+                str(steps),
+                "--cfg-scale",
+                str(cfg_scale),
+                "-s",
+                str(seed),
             ]
             if vae_file and os.path.exists(vae_file):
                 cmd.extend(["--vae", str(vae_file)])
@@ -175,13 +200,15 @@ class StableDiffusionWorker(BaseWorker):
             return WorkerResponse(
                 status=ServiceState.READY,
                 job_id=request.job_id,
-                artifacts=[{
-                    "path": output_image,
-                    "kind": "IMAGE",
-                    "width": val_res.width,
-                    "height": val_res.height,
-                    "producer": "stable-diffusion.cpp",
-                }],
+                artifacts=[
+                    {
+                        "path": output_image,
+                        "kind": "IMAGE",
+                        "width": val_res.width,
+                        "height": val_res.height,
+                        "producer": "stable-diffusion.cpp",
+                    }
+                ],
                 telemetry=telemetry,
             )
 

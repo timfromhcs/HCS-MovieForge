@@ -1,12 +1,12 @@
 """Piper neural TTS worker generating local, low-latency dialogue audio from text."""
 
 import os
-import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
 from typing import Any
+
 from engine.workers.base import BaseWorker
 from packages.contracts.src.worker import (
     ServiceState,
@@ -98,10 +98,14 @@ class PiperWorker(BaseWorker):
 
         cmd = [
             sys.executable,
-            "-m", "piper",
-            "-m", str(model_path),
-            "-f", str(output_p),
-            "-s", str(speaker),
+            "-m",
+            "piper",
+            "-m",
+            str(model_path),
+            "-f",
+            str(output_p),
+            "-s",
+            str(speaker),
         ]
         if config_path and os.path.exists(config_path):
             cmd.extend(["-c", str(config_path)])
@@ -154,14 +158,16 @@ class PiperWorker(BaseWorker):
             return WorkerResponse(
                 status=ServiceState.READY,
                 job_id=request.job_id,
-                artifacts=[{
-                    "path": str(output_p),
-                    "kind": "AUDIO_WAV",
-                    "duration_sec": val_res.duration_sec,
-                    "sample_rate": val_res.sample_rate,
-                    "channels": val_res.channels,
-                    "producer": "piper",
-                }],
+                artifacts=[
+                    {
+                        "path": str(output_p),
+                        "kind": "AUDIO_WAV",
+                        "duration_sec": val_res.duration_sec,
+                        "sample_rate": val_res.sample_rate,
+                        "channels": val_res.channels,
+                        "producer": "piper",
+                    }
+                ],
                 telemetry=telemetry,
             )
 

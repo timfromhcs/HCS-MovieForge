@@ -1,6 +1,5 @@
 """Unit tests for core contracts and state schemas."""
 
-import pytest
 from packages.contracts.src.artifact import ArtifactKind, ArtifactRecord, QAStatus
 from packages.contracts.src.hardware import HardwareProfile, SystemMemoryInfo, VulkanDeviceInfo
 from packages.contracts.src.job import (
@@ -8,9 +7,7 @@ from packages.contracts.src.job import (
     JobRecord,
     JobStatus,
     ResourceEstimate,
-    StructuredError,
 )
-from packages.contracts.src.worker import ServiceState, WorkerCapabilities, WorkerTelemetry
 
 
 def test_job_record_creation():

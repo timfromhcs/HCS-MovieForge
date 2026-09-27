@@ -1,9 +1,9 @@
 """Unit tests for JobScheduler durable queuing, locality ordering, and concurrency limits."""
 
 from pathlib import Path
-import pytest
+
 from engine.scheduler.scheduler import JobScheduler
-from packages.contracts.src.job import JobPriority, JobStatus, ResourceEstimate
+from packages.contracts.src.job import JobStatus, ResourceEstimate
 from packages.project_format.src.db import ProjectDB
 
 
@@ -35,6 +35,8 @@ def test_scheduler_queue_and_locality(tmp_path: Path):
         model_id="bonsai",
         resource_estimate=ResourceEstimate(requires_heavy_gpu=True),
     )
+
+    assert j2.job_id != j3.job_id
 
     # If active model is "bonsai", locality scheduling should prefer job 1 or job 3 over job 2
     next_job = scheduler.get_next_job(currently_active_model="bonsai")

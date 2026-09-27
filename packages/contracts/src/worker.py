@@ -1,12 +1,13 @@
 """Worker contracts, service states, and execution protocol for HCS MovieForge."""
 
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 
-class ServiceState(str, Enum):
+class ServiceState(StrEnum):
     STARTING = "STARTING"
     READY = "READY"
     BUSY = "BUSY"
@@ -19,7 +20,7 @@ class ServiceState(str, Enum):
 
 
 class WorkerTelemetry(BaseModel):
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     job_id: str | None = None
     worker_id: str
     model_id: str | None = None

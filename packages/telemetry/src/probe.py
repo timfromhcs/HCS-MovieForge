@@ -4,13 +4,15 @@ import os
 import platform
 import shutil
 import subprocess
+
+import psutil
+
 from packages.contracts.src.hardware import (
     HardwareProfile,
     StorageInfo,
     SystemMemoryInfo,
     VulkanDeviceInfo,
 )
-import psutil
 
 
 def probe_vulkan() -> VulkanDeviceInfo:
@@ -47,7 +49,6 @@ def probe_hardware(target_path: str = ".") -> HardwareProfile:
     """Collects real system hardware telemetry, memory, storage, and safe budgets."""
     vm = psutil.virtual_memory()
     swap = psutil.swap_memory()
-    cpu_freq = psutil.cpu_freq()
 
     sys_mem = SystemMemoryInfo(
         total_ram_mb=int(vm.total / (1024 * 1024)),

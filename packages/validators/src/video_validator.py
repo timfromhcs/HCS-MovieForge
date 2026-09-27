@@ -49,15 +49,14 @@ def validate_video(
 
     size = path.stat().st_size
     if size < min_size_bytes:
-        return VideoValidationResult(
-            False,
-            [f"Video file size too small ({size} bytes < {min_size_bytes} bytes)"]
-        )
+        return VideoValidationResult(False, [f"Video file size too small ({size} bytes < {min_size_bytes} bytes)"])
 
     cmd = [
         "ffprobe",
-        "-v", "quiet",
-        "-print_format", "json",
+        "-v",
+        "quiet",
+        "-print_format",
+        "json",
         "-show_format",
         "-show_streams",
         str(path),

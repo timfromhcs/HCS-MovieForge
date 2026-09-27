@@ -39,10 +39,7 @@ def validate_glb(glb_path: Path | str, min_size_bytes: int = 1024) -> MeshValida
 
     size = path.stat().st_size
     if size < min_size_bytes:
-        return MeshValidationResult(
-            False,
-            [f"GLB file size too small ({size} bytes < minimum {min_size_bytes} bytes)"]
-        )
+        return MeshValidationResult(False, [f"GLB file size too small ({size} bytes < minimum {min_size_bytes} bytes)"])
 
     try:
         with open(path, "rb") as f:
@@ -52,10 +49,7 @@ def validate_glb(glb_path: Path | str, min_size_bytes: int = 1024) -> MeshValida
 
             magic, version, length = struct.unpack("<4sII", header)
             if magic != b"glTF":
-                return MeshValidationResult(
-                    False,
-                    [f"Invalid GLB magic bytes: expected 'glTF', got {magic!r}"]
-                )
+                return MeshValidationResult(False, [f"Invalid GLB magic bytes: expected 'glTF', got {magic!r}"])
 
             if version != 2:
                 errors.append(f"Unexpected glTF version: {version} (expected 2)")
@@ -70,10 +64,7 @@ def validate_glb(glb_path: Path | str, min_size_bytes: int = 1024) -> MeshValida
 
             chunk_len, chunk_type = struct.unpack("<II", chunk_header)
             if chunk_type != 0x4E4F534A:  # ASCII for "JSON"
-                return MeshValidationResult(
-                    False,
-                    [f"First chunk must be JSON, got chunk type 0x{chunk_type:08X}"]
-                )
+                return MeshValidationResult(False, [f"First chunk must be JSON, got chunk type 0x{chunk_type:08X}"])
 
             json_bytes = f.read(chunk_len)
             if len(json_bytes) < chunk_len:
@@ -109,7 +100,7 @@ def validate_glb(glb_path: Path | str, min_size_bytes: int = 1024) -> MeshValida
                 pos_accessor = accessors[pos_idx]
                 v_count = pos_accessor.get("count", 0)
                 if v_count <= 0:
-                    errors.append(f"POSITION accessor has 0 vertices.")
+                    errors.append("POSITION accessor has 0 vertices.")
                 total_vertices += v_count
 
                 # Check bounding coordinates min/max
@@ -159,7 +150,4 @@ def validate_glb(glb_path: Path | str, min_size_bytes: int = 1024) -> MeshValida
             metadata={"gltf_version": version, "file_size": size},
         )
     except Exception as e:
-        return MeshValidationResult(
-            is_valid=False,
-            errors=[f"Failed to parse GLB: {e}"]
-        )
+        return MeshValidationResult(is_valid=False, errors=[f"Failed to parse GLB: {e}"])

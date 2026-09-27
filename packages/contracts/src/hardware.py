@@ -1,6 +1,7 @@
 """Hardware contracts and resource budgeting models for HCS MovieForge."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -32,7 +33,7 @@ class StorageInfo(BaseModel):
 
 
 class HardwareProfile(BaseModel):
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     os_name: str = "Windows"
     os_version: str = "11 Pro"
     cpu_name: str = "AMD Ryzen"
@@ -44,7 +45,7 @@ class HardwareProfile(BaseModel):
     is_uma: bool = True
 
     # Derived safe operational budgets in MB
-    os_safety_reserve_mb: int = 3072      # Keep 3GB for Windows
-    blender_reserve_mb: int = 2048        # Keep 2GB for Blender
-    model_budget_mb: int = 6144           # Available budget for active models
-    max_heavy_gpu_jobs: int = 1           # Enforce max 1 heavy GPU job concurrently
+    os_safety_reserve_mb: int = 3072  # Keep 3GB for Windows
+    blender_reserve_mb: int = 2048  # Keep 2GB for Blender
+    model_budget_mb: int = 6144  # Available budget for active models
+    max_heavy_gpu_jobs: int = 1  # Enforce max 1 heavy GPU job concurrently

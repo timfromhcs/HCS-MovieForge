@@ -1,9 +1,9 @@
 """Unit tests for ArtifactManager registration, hashing, and quarantine."""
 
 from pathlib import Path
-import pytest
+
 from engine.artifact_manager.manager import ArtifactManager
-from packages.contracts.src.artifact import ArtifactKind, QAStatus
+from packages.contracts.src.artifact import ArtifactKind
 from packages.project_format.src.db import ProjectDB
 
 

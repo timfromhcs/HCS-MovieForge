@@ -3,11 +3,9 @@
 import json
 import os
 import signal
-import sys
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+
 from packages.contracts.src.worker import ServiceState
 from packages.telemetry.src.logger import setup_logger
 
@@ -44,7 +42,7 @@ class ProcessSupervisor:
         pids = [s.pid for s in self.services.values() if s.pid is not None]
         state_data = {
             "supervisor_pid": os.getpid(),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "status": "RUNNING" if self.running else "STOPPED",
             "pids": pids,
             "services": {

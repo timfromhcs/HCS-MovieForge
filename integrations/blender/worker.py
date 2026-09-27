@@ -1,12 +1,12 @@
 """Blender headless worker executing Python automation scripts for rendering, rigging, and assembly."""
 
-import json
 import os
 import shutil
 import subprocess
 import time
 from pathlib import Path
 from typing import Any
+
 from engine.workers.base import BaseWorker
 from packages.contracts.src.worker import (
     ServiceState,
@@ -73,7 +73,6 @@ class BlenderWorker(BaseWorker):
         self.current_job_id = request.job_id
         start_time = time.time()
 
-        task_type = request.task_type
         params = request.parameters
         script_content = params.get("script")
         output_path = params.get("output_path", str(self.runtime_dir / f"{request.job_id}_render.png"))
@@ -94,7 +93,7 @@ class BlenderWorker(BaseWorker):
 
         try:
             self._current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            stdout, stderr = self._current_process.communicate(timeout= params.get("timeout_sec", 60))
+            stdout, stderr = self._current_process.communicate(timeout=params.get("timeout_sec", 60))
             duration = time.time() - start_time
 
             if script_file.exists():

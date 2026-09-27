@@ -1,10 +1,10 @@
 """Unit tests for agent tool registry and master agent planning."""
 
-import pytest
 from pathlib import Path
-from packages.project_format.src.db import ProjectDB
-from engine.artifact_manager.manager import ArtifactManager
+
 from agent.tools.registry import ToolRegistry
+from engine.artifact_manager.manager import ArtifactManager
+from packages.project_format.src.db import ProjectDB
 
 
 def test_tool_registry_initialization(tmp_path: Path):

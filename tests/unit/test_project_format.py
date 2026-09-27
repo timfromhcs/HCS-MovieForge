@@ -1,7 +1,7 @@
 """Unit tests for project directory format and SQLite WAL database."""
 
 from pathlib import Path
-import pytest
+
 from packages.project_format.src.db import ProjectDB
 from packages.project_format.src.project import (
     ProjectManifest,

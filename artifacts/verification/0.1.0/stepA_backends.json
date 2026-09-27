@@ -1,0 +1,32 @@
+{
+  "phase": "A: Voll-Verifikation Backend-Harnesse",
+  "date": "2026-09-27",
+  "host": "Windows 11 x64, AMD Ryzen 7 7735HS, Radeon 680M Vulkan 1.4.315, Python 3.14.6",
+  "doctor": "READY 15/15 (os, git 2.54, python, node 22, rust 1.96, cmake, ninja, ffmpeg, blender 5.1.2, vulkan, sd.cpp master-920, trellis 0.8.1, llama b11205, whisper b5130, piper 1.8.0)",
+  "unit_tests": "12/12 PASS in 0.49s",
+  "harnesses": {
+    "blender": "PASS in 3.23s (headless scene created, Blender 5.1.2 quit clean)",
+    "ffmpeg": "PASS in 0.51s (1080p encode + probe verified)",
+    "whisper": "PASS in 1.59s (2.0s sample transcribed)",
+    "piper": "PASS in 6.56s (wav 4.84s, 22050Hz mono validated)",
+    "bonsai": "PASS in 195.93s (FLUX.2 Klein Q2_K Vulkan, 1/1 images saved to runtime/test_bonsai_robot.png)",
+    "trellis": "PASS in 415.04s (TRELLIS.2 Q4, mesh V=163744 F=272540, runtime/test_trellis_output.glb)",
+    "qwen3_vl": "PASS in 106.76s harness-exit-0 BUT WEAK OUTPUT: greeting leakage ('Hello/Hi there/How are you?') + generic blurred-robot description; prompt template needs fix before production use"
+  },
+  "static_checks": {
+    "ruff_check": "PASS (line-length 120, StrEnum migration for UP042, hyphen dup packages deleted)",
+    "ruff_format": "PASS (63 files)",
+    "mypy": "PASS on 12 core files (contracts, scheduler, artifact_manager, project_format); full-repo mypy pending new modules",
+    "pytest": "12/12 PASS after StrEnum migration"
+  },
+  "removed": [
+    "integrations/whisper-cpp (broken hyphen dup of whisper_cpp)",
+    "integrations/llama-cpp, trellis-cpp, stable-diffusion-cpp (empty hyphen dirs)",
+    "packages/project-format (broken hyphen dup of project_format)"
+  ],
+  "known_limitations": [
+    "Qwen3-VL prompt template leaks chat greetings; needs system-prompt fix + re-test",
+    "PSScriptAnalyzer/shellcheck/actionlint/zizmor/gitleaks availability UNVERIFIED on this host",
+    "Full-repo mypy + eslint/tsc/cargo checks pending (desktop/TS/Rust skeletons empty)"
+  ]
+}

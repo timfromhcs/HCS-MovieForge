@@ -2,12 +2,12 @@
 
 from abc import ABC, abstractmethod
 from typing import Any
+
 from packages.contracts.src.worker import (
     ServiceState,
     WorkerCapabilities,
     WorkerRequest,
     WorkerResponse,
-    WorkerTelemetry,
 )
 
 

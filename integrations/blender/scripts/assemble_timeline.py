@@ -1,16 +1,17 @@
-"""Blender headless script: Assemble video clips, image stills, and audio track on the VSE timeline and render a 1080p master."""
+"""Blender headless script: assemble VSE clips/stills/audio and render 1080p master."""
 
 import argparse
 import json
 import os
 import sys
+
 import bpy
 
 
 def parse_args():
     if "--" in sys.argv:
         idx = sys.argv.index("--")
-        raw_args = sys.argv[idx + 1:]
+        raw_args = sys.argv[idx + 1 :]
     else:
         raw_args = []
 
@@ -40,7 +41,7 @@ def main():
 
     clips = []
     if args.clips_json and os.path.exists(args.clips_json):
-        with open(args.clips_json, "r", encoding="utf-8") as f:
+        with open(args.clips_json, encoding="utf-8") as f:
             data = json.load(f)
             if isinstance(data, list):
                 clips = data
@@ -76,7 +77,7 @@ def main():
         if ext in [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"]:
             # Image strip
             strip = strips_coll.new_image(
-                name=f"Still_{i+1}",
+                name=f"Still_{i + 1}",
                 filepath=cpath,
                 channel=1,
                 frame_start=current_frame,
@@ -88,7 +89,7 @@ def main():
         else:
             # Movie strip
             strip = strips_coll.new_movie(
-                name=f"Movie_{i+1}",
+                name=f"Movie_{i + 1}",
                 filepath=cpath,
                 channel=1,
                 frame_start=current_frame,
@@ -111,7 +112,6 @@ def main():
     # Render frame sequence
     temp_dir = os.path.join(os.path.dirname(args.output), "timeline_frames_tmp")
     os.makedirs(temp_dir, exist_ok=True)
-    frame_pattern = os.path.join(temp_dir, "frame_%04d.png")
 
     scene.render.filepath = os.path.join(temp_dir, "frame_")
     scene.render.image_settings.file_format = "PNG"
@@ -123,23 +123,31 @@ def main():
     # Encode with FFmpeg
     import shutil
     import subprocess
+
     ffmpeg_exe = shutil.which("ffmpeg") or "ffmpeg"
     ffmpeg_cmd = [
         ffmpeg_exe,
         "-y",
-        "-framerate", str(args.fps),
-        "-i", os.path.join(temp_dir, "frame_%04d.png"),
+        "-framerate",
+        str(args.fps),
+        "-i",
+        os.path.join(temp_dir, "frame_%04d.png"),
     ]
 
     if args.audio and os.path.exists(args.audio):
         ffmpeg_cmd.extend(["-i", args.audio, "-c:a", "aac", "-b:a", "192k", "-shortest"])
 
-    ffmpeg_cmd.extend([
-        "-c:v", "libx264",
-        "-pix_fmt", "yuv420p",
-        "-r", str(args.fps),
-        args.output,
-    ])
+    ffmpeg_cmd.extend(
+        [
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-r",
+            str(args.fps),
+            args.output,
+        ]
+    )
 
     print(f"[INFO] Encoding final 1080p MP4 master with FFmpeg: {' '.join(ffmpeg_cmd)}")
     res = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)

@@ -1,12 +1,13 @@
 """Artifact contracts and schema definitions for HCS MovieForge."""
 
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 
-class ArtifactKind(str, Enum):
+class ArtifactKind(StrEnum):
     IMAGE = "IMAGE"
     MASK = "MASK"
     CUTOUT = "CUTOUT"
@@ -26,7 +27,7 @@ class ArtifactKind(str, Enum):
     REPORT = "REPORT"
 
 
-class QAStatus(str, Enum):
+class QAStatus(StrEnum):
     UNINSPECTED = "UNINSPECTED"
     PENDING = "PENDING"
     PASSED = "PASSED"
@@ -43,7 +44,7 @@ class ArtifactRecord(BaseModel):
     size: int
     sha256: str
     mime: str
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     producer: str
     producer_version: str = "0.1.0"
     model_id: str | None = None

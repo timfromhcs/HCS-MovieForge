@@ -1,8 +1,7 @@
 """Project recovery and crash handling on startup."""
 
-import json
 from pathlib import Path
-from packages.contracts.src.job import JobStatus
+
 from packages.project_format.src.db import ProjectDB
 
 
@@ -28,10 +27,7 @@ class RecoveryManager:
             interrupted = cursor.fetchall()
             for row in interrupted:
                 job_id = row["job_id"]
-                conn.execute(
-                    "UPDATE jobs SET status = 'RECOVERING' WHERE job_id = ?",
-                    (job_id,)
-                )
+                conn.execute("UPDATE jobs SET status = 'RECOVERING' WHERE job_id = ?", (job_id,))
                 stats["orphaned_jobs_reclaimed"] += 1
             conn.commit()
 

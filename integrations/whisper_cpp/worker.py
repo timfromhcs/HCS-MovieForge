@@ -6,6 +6,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any
+
 from engine.workers.base import BaseWorker
 from packages.contracts.src.worker import (
     ServiceState,
@@ -27,7 +28,7 @@ class WhisperWorker(BaseWorker):
         if not self.binary_path.exists():
             return {"status": "error", "message": f"Whisper binary not found at {self.binary_path}"}
         try:
-            res = subprocess.run([str(self.binary_path), "--version"], capture_output=True, text=True, timeout=5)
+            subprocess.run([str(self.binary_path), "--version"], capture_output=True, text=True, timeout=5)
             return {"status": "ok", "binary": str(self.binary_path)}
         except Exception as e:
             return {"status": "error", "message": str(e)}
@@ -82,10 +83,13 @@ class WhisperWorker(BaseWorker):
         output_json_base = audio_file + "_whisper_out"
         cmd = [
             str(self.binary_path),
-            "-m", str(model_file),
-            "-f", str(audio_file),
+            "-m",
+            str(model_file),
+            "-f",
+            str(audio_file),
             "-oj",
-            "-of", output_json_base,
+            "-of",
+            output_json_base,
             "-nt",
         ]
 
@@ -97,7 +101,7 @@ class WhisperWorker(BaseWorker):
             json_file = Path(output_json_base + ".json")
             transcript_text = ""
             if json_file.exists():
-                with open(json_file, "r", encoding="utf-8") as f:
+                with open(json_file, encoding="utf-8") as f:
                     data = json.load(f)
                     transcript_text = data.get("transcription", [{}])[0].get("text", "").strip()
                 json_file.unlink()

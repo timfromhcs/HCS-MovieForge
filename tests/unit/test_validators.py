@@ -1,9 +1,9 @@
 """Unit tests for hashing, image validation, and mesh structural validation."""
 
-import io
 from pathlib import Path
-import pytest
+
 from PIL import Image
+
 from packages.validators.src.hash_validator import calculate_sha256, verify_sha256
 from packages.validators.src.image_validator import validate_image
 from packages.validators.src.mesh_validator import validate_glb

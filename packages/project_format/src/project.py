@@ -1,10 +1,9 @@
 """Project format structure, directory initialization, and validation."""
 
-import json
 from pathlib import Path
 from typing import Any
-from pydantic import BaseModel, Field
 
+from pydantic import BaseModel, Field
 
 PROJECT_DIRECTORIES = [
     "story",
@@ -61,15 +60,15 @@ def init_project_structure(project_root: Path, manifest: ProjectManifest) -> Non
     toml_path = project_root / "project.toml"
     with open(toml_path, "w", encoding="utf-8") as f:
         f.write(
-            f'[project]\n'
+            f"[project]\n"
             f'name = "{manifest.name}"\n'
             f'id = "{manifest.project_id}"\n'
             f'version = "{manifest.version}"\n\n'
-            f'[media]\n'
-            f'width = {manifest.target_resolution[0]}\n'
-            f'height = {manifest.target_resolution[1]}\n'
-            f'fps = {manifest.target_fps}\n'
-            f'sample_rate = {manifest.audio_sample_rate}\n'
+            f"[media]\n"
+            f"width = {manifest.target_resolution[0]}\n"
+            f"height = {manifest.target_resolution[1]}\n"
+            f"fps = {manifest.target_fps}\n"
+            f"sample_rate = {manifest.audio_sample_rate}\n"
         )
 
 

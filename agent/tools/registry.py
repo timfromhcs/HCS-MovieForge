@@ -1,21 +1,42 @@
 """Agent tool contracts, registry, and execution dispatcher."""
 
-import json
 import os
 import subprocess
-import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
+
+from engine.artifact_manager.manager import ArtifactManager
+from integrations.blender.worker import BlenderWorker
+from integrations.llama_cpp.worker import LlamaWorker
+from integrations.piper.worker import PiperWorker
+from integrations.stable_diffusion_cpp.worker import StableDiffusionWorker
+from integrations.trellis_cpp.worker import TrellisWorker
+from integrations.whisper_cpp.worker import WhisperWorker
 from packages.contracts.src.artifact import ArtifactKind
 from packages.contracts.src.worker import WorkerRequest
 from packages.project_format.src.db import ProjectDB
-from engine.artifact_manager.manager import ArtifactManager
-from integrations.stable_diffusion_cpp.worker import StableDiffusionWorker
-from integrations.trellis_cpp.worker import TrellisWorker
-from integrations.llama_cpp.worker import LlamaWorker
-from integrations.whisper_cpp.worker import WhisperWorker
-from integrations.piper.worker import PiperWorker
-from integrations.blender.worker import BlenderWorker
+
+_SQL_STORY_BIBLE_UPSERT = (
+    "INSERT OR REPLACE INTO story_bible (entity_id, entity_type, title, content, tags) VALUES (?, ?, ?, ?, ?);"
+)
+_SQL_CHARACTER_UPSERT = (
+    "INSERT OR REPLACE INTO characters "
+    "(character_id, project_id, name, description, visual_style) VALUES (?, ?, ?, ?, ?);"
+)
+_SQL_LOCATION_UPSERT = (
+    "INSERT OR REPLACE INTO locations "
+    "(location_id, project_id, name, description, time_of_day, weather) "
+    "VALUES (?, ?, ?, ?, ?, ?);"
+)
+_SQL_SCENE_UPSERT = (
+    "INSERT OR REPLACE INTO scenes (scene_id, project_id, scene_number, title, synopsis) VALUES (?, ?, ?, ?, ?);"
+)
+_SQL_SHOT_UPSERT = (
+    "INSERT OR REPLACE INTO shots "
+    "(shot_id, scene_id, project_id, shot_number, camera_prompt, action_description, "
+    "dialogue, duration_sec) VALUES (?, ?, ?, ?, ?, ?, ?, ?);"
+)
 
 
 class ToolRegistry:
@@ -214,7 +235,7 @@ class ToolRegistry:
         with self.db.get_connection() as conn:
             # Update story bible with logline
             conn.execute(
-                "INSERT OR REPLACE INTO story_bible (entity_id, entity_type, title, content, tags) VALUES (?, ?, ?, ?, ?);",
+                _SQL_STORY_BIBLE_UPSERT,
                 ("story_synopsis", "story", title, logline, "main,logline"),
             )
 
@@ -222,40 +243,59 @@ class ToolRegistry:
             for c in chars:
                 cid = c.get("id") or f"char_{c['name'].lower().replace(' ', '_')}"
                 conn.execute(
-                    "INSERT OR REPLACE INTO characters (character_id, project_id, name, description, visual_style) VALUES (?, ?, ?, ?, ?);",
+                    _SQL_CHARACTER_UPSERT,
                     (cid, project_id, c["name"], c.get("description", ""), c.get("visual_style", "")),
                 )
+                char_content = f"{c.get('description', '')} | Style: {c.get('visual_style', '')}"
                 conn.execute(
-                    "INSERT OR REPLACE INTO story_bible (entity_id, entity_type, title, content, tags) VALUES (?, ?, ?, ?, ?);",
-                    (cid, "character", c["name"], f"{c.get('description', '')} | Style: {c.get('visual_style', '')}", "character"),
+                    _SQL_STORY_BIBLE_UPSERT,
+                    (cid, "character", c["name"], char_content, "character"),
                 )
 
             # Insert locations
-            for l in locs:
-                lid = l.get("id") or f"loc_{l['name'].lower().replace(' ', '_')}"
+            for loc in locs:
+                lid = loc.get("id") or f"loc_{loc['name'].lower().replace(' ', '_')}"
                 conn.execute(
-                    "INSERT OR REPLACE INTO locations (location_id, project_id, name, description, time_of_day, weather) VALUES (?, ?, ?, ?, ?, ?);",
-                    (lid, project_id, l["name"], l.get("description", ""), l.get("time_of_day", ""), l.get("weather", "")),
+                    _SQL_LOCATION_UPSERT,
+                    (
+                        lid,
+                        project_id,
+                        loc["name"],
+                        loc.get("description", ""),
+                        loc.get("time_of_day", ""),
+                        loc.get("weather", ""),
+                    ),
                 )
+                loc_content = f"{loc.get('description', '')} | Weather: {loc.get('weather', '')}"
                 conn.execute(
-                    "INSERT OR REPLACE INTO story_bible (entity_id, entity_type, title, content, tags) VALUES (?, ?, ?, ?, ?);",
-                    (lid, "location", l["name"], f"{l.get('description', '')} | Weather: {l.get('weather', '')}", "location"),
+                    _SQL_STORY_BIBLE_UPSERT,
+                    (lid, "location", loc["name"], loc_content, "location"),
                 )
 
             # Insert scene 1 & shots
             conn.execute(
-                "INSERT OR REPLACE INTO scenes (scene_id, project_id, scene_number, title, synopsis) VALUES (?, ?, ?, ?, ?);",
+                _SQL_SCENE_UPSERT,
                 (f"scene_{project_id}_1", project_id, 1, title, logline),
             )
             for idx, s in enumerate(shots, start=1):
                 sid = f"shot_{project_id}_{idx}"
                 conn.execute(
-                    "INSERT OR REPLACE INTO shots (shot_id, scene_id, project_id, shot_number, camera_prompt, action_description, dialogue, duration_sec) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
-                    (sid, f"scene_{project_id}_1", project_id, idx, s.get("camera_prompt", ""), s.get("action", ""), s.get("dialogue", ""), s.get("duration_sec", 3.0)),
+                    _SQL_SHOT_UPSERT,
+                    (
+                        sid,
+                        f"scene_{project_id}_1",
+                        project_id,
+                        idx,
+                        s.get("camera_prompt", ""),
+                        s.get("action", ""),
+                        s.get("dialogue", ""),
+                        s.get("duration_sec", 3.0),
+                    ),
                 )
             conn.commit()
 
-        return {"status": "ok", "message": f"Story '{title}' committed to project database with {len(chars)} characters, {len(locs)} locations, and {len(shots)} shots."}
+        msg = f"Story '{title}' committed: {len(chars)} characters, {len(locs)} locations, {len(shots)} shots."
+        return {"status": "ok", "message": msg}
 
     def _tool_image_generate(self, **kwargs) -> dict[str, Any]:
         project_id = kwargs["project_id"]
@@ -296,7 +336,12 @@ class ToolRegistry:
             canonical=True,
             metadata={"prompt": prompt, "width": width, "height": height, "steps": steps},
         )
-        return {"status": "ok", "artifact_id": rec.artifact_id, "path": str(out_path), "relative_path": rec.relative_path}
+        return {
+            "status": "ok",
+            "artifact_id": rec.artifact_id,
+            "path": str(out_path),
+            "relative_path": rec.relative_path,
+        }
 
     def _tool_asset_image_to_3d(self, **kwargs) -> dict[str, Any]:
         project_id = kwargs["project_id"]
@@ -337,7 +382,12 @@ class ToolRegistry:
             canonical=True,
             metadata={"resolution": resolution, "steps": steps},
         )
-        return {"status": "ok", "artifact_id": rec.artifact_id, "path": str(out_path), "relative_path": rec.relative_path}
+        return {
+            "status": "ok",
+            "artifact_id": rec.artifact_id,
+            "path": str(out_path),
+            "relative_path": rec.relative_path,
+        }
 
     def _tool_voice_generate(self, **kwargs) -> dict[str, Any]:
         project_id = kwargs["project_id"]
@@ -373,7 +423,12 @@ class ToolRegistry:
             canonical=True,
             metadata={"text": text, "speaker": speaker},
         )
-        return {"status": "ok", "artifact_id": rec.artifact_id, "path": str(out_path), "relative_path": rec.relative_path}
+        return {
+            "status": "ok",
+            "artifact_id": rec.artifact_id,
+            "path": str(out_path),
+            "relative_path": rec.relative_path,
+        }
 
     def _tool_speech_transcribe(self, **kwargs) -> dict[str, Any]:
         audio_path = kwargs["audio_path"]
@@ -404,13 +459,19 @@ class ToolRegistry:
         cmd = [
             self.blender_worker.blender_path,
             "-b",
-            "--python", str(script),
+            "--python",
+            str(script),
             "--",
-            "--input", str(Path(glb_path).resolve()),
-            "--output", str(out_path.resolve()),
-            "--width", str(width),
-            "--height", str(height),
-            "--frames", "1",
+            "--input",
+            str(Path(glb_path).resolve()),
+            "--output",
+            str(out_path.resolve()),
+            "--width",
+            str(width),
+            "--height",
+            str(height),
+            "--frames",
+            "1",
         ]
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0 or not out_path.exists():
@@ -425,7 +486,12 @@ class ToolRegistry:
             canonical=True,
             metadata={"width": width, "height": height, "glb": str(glb_path)},
         )
-        return {"status": "ok", "artifact_id": rec.artifact_id, "path": str(out_path), "relative_path": rec.relative_path}
+        return {
+            "status": "ok",
+            "artifact_id": rec.artifact_id,
+            "path": str(out_path),
+            "relative_path": rec.relative_path,
+        }
 
     def _tool_timeline_assemble(self, **kwargs) -> dict[str, Any]:
         project_id = kwargs["project_id"]
@@ -442,12 +508,17 @@ class ToolRegistry:
         cmd = [
             self.blender_worker.blender_path,
             "-b",
-            "--python", str(script),
+            "--python",
+            str(script),
             "--",
-            "--clips", *[str(Path(c).resolve()) for c in clips],
-            "--output", str(out_path.resolve()),
-            "--fps", str(fps),
-            "--seconds-per-still", str(duration_per_still),
+            "--clips",
+            *[str(Path(c).resolve()) for c in clips],
+            "--output",
+            str(out_path.resolve()),
+            "--fps",
+            str(fps),
+            "--seconds-per-still",
+            str(duration_per_still),
         ]
         if audio_path:
             cmd.extend(["--audio", str(Path(audio_path).resolve())])
@@ -465,7 +536,12 @@ class ToolRegistry:
             canonical=True,
             metadata={"fps": fps, "clips_count": len(clips)},
         )
-        return {"status": "ok", "artifact_id": rec.artifact_id, "path": str(out_path), "relative_path": rec.relative_path}
+        return {
+            "status": "ok",
+            "artifact_id": rec.artifact_id,
+            "path": str(out_path),
+            "relative_path": rec.relative_path,
+        }
 
     def _tool_agent_inspect_image(self, **kwargs) -> dict[str, Any]:
         image_path = kwargs["image_path"]

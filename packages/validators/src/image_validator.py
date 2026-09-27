@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Any
+
 from PIL import Image
 
 
@@ -41,8 +42,7 @@ def validate_image(
     size = path.stat().st_size
     if size < min_size_bytes:
         return ImageValidationResult(
-            False,
-            [f"Image file size too small ({size} bytes < minimum {min_size_bytes} bytes)"]
+            False, [f"Image file size too small ({size} bytes < minimum {min_size_bytes} bytes)"]
         )
 
     try:
@@ -81,7 +81,4 @@ def validate_image(
                 metadata=meta,
             )
     except Exception as e:
-        return ImageValidationResult(
-            is_valid=False,
-            errors=[f"Failed to decode or verify image: {e}"]
-        )
+        return ImageValidationResult(is_valid=False, errors=[f"Failed to decode or verify image: {e}"])

@@ -1,8 +1,9 @@
-"""Blender headless script: Import GLTF/GLB, setup 3-point studio lighting and turntable camera, and render with EEVEE."""
+"""Blender headless script: import GLB, set up studio light + turntable, render EEVEE."""
 
 import argparse
 import math
 import sys
+
 import bpy
 import mathutils
 
@@ -11,7 +12,7 @@ def parse_args():
     # Everything after '--' is user arguments
     if "--" in sys.argv:
         idx = sys.argv.index("--")
-        raw_args = sys.argv[idx + 1:]
+        raw_args = sys.argv[idx + 1 :]
     else:
         raw_args = []
 
@@ -23,6 +24,7 @@ def parse_args():
     parser.add_argument("--frames", type=int, default=1, help="Number of turntable frames (1 = single beauty shot)")
     args = parser.parse_args(raw_args)
     import os
+
     args.input = os.path.abspath(args.input)
     args.output = os.path.abspath(args.output)
     return args
