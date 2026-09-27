@@ -1,0 +1,27 @@
+{
+  "phase": "C: Motion/Cinematography",
+  "date": "2026-09-27",
+  "added": [
+    "integrations/blender/cine.py: 15 camera + 11 lighting + 12 FX + 18 actions + 14-pose matrix, validators, deterministic motion parser",
+    "scripts/apply_cine.py: headless EEVEE proof renders + evidence JSON for camera/lighting/fx/motion",
+    "scripts/rig_character.py: GLB import + 1.8m normalize + strict humanoid gate (TRELLIS blobs BLOCKED, exit 2, no fake rig)",
+    "scripts/pose_sheet.py: Rigify metarig (addon enabled headless) + 14 poses + per-pose renders + evidence",
+    "registry tools: camera.configure, lighting.configure, fx.configure, motion.plan (typed, artifact-registered)"
+  ],
+  "verified": {
+    "pytest_unit_golden": "28/28 PASS (24 unit inkl. test_cine + 4 golden: rig_gate, camera, fx, motion)",
+    "rig_gate": "PASS exit-2 BLOCKED_NON_HUMANOID on spark7_mesh.glb (verts>0 measured, ratio fails gate honestly)",
+    "camera_orbit": "PASS 960x540 render lens=35 evidence",
+    "fx_rain": "PASS 1000 particles render, no crash",
+    "pose_sheet": "PASS 14/14 poses rendered, metarig bones>100, sheet composed in system Python",
+    "motion_plan_live": "walk(4m)+decelerate+stop+head_turn(left) from spec example",
+    "camera_configure_live": "static preset rendered + artifact art_f9ffb19f56c1 registered",
+    "ruff_mypy": "PASS"
+  },
+  "known_limitations": [
+    "Full Rigify generate/bind on humanoid meshes UNVERIFIED (no humanoid fixture yet; metarig placement path exists but generate step untested)",
+    "Face rig + visemes pending Phase D lipsync",
+    "Mocap/pose-retarget route + text-to-motion AI remain EXPERIMENTAL namespace (no CUDA text-to-motion dependency added, per spec)",
+    "FX smoke/fire domains recorded as configured-preview only where particle path not taken"
+  ]
+}

@@ -207,6 +207,69 @@ class ToolRegistry:
             handler=self._tool_timeline_assemble,
         )
 
+        # 8. camera.configure
+        self.register_tool(
+            name="camera.configure",
+            description="Apply a validated camera preset and render proof still with Blender.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "preset": {"type": "string"},
+                    "lens_mm": {"type": "number"},
+                    "output_filename": {"type": "string"},
+                },
+                "required": ["project_id", "preset"],
+            },
+            handler=self._tool_camera_configure,
+        )
+
+        # 9. lighting.configure
+        self.register_tool(
+            name="lighting.configure",
+            description="Apply a validated lighting preset and render proof still with Blender.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "preset": {"type": "string"},
+                    "output_filename": {"type": "string"},
+                },
+                "required": ["project_id", "preset"],
+            },
+            handler=self._tool_lighting_configure,
+        )
+
+        # 10. fx.configure
+        self.register_tool(
+            name="fx.configure",
+            description="Enable a deterministic Blender FX system and render proof still.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "preset": {"type": "string"},
+                    "output_filename": {"type": "string"},
+                },
+                "required": ["project_id", "preset"],
+            },
+            handler=self._tool_fx_configure,
+        )
+
+        # 11. motion.plan
+        self.register_tool(
+            name="motion.plan",
+            description="Translate plain-text direction into structured editable motion steps.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "text": {"type": "string"},
+                },
+                "required": ["text"],
+            },
+            handler=self._tool_motion_plan,
+        )
+
         # 8. agent.inspect_image
         self.register_tool(
             name="agent.inspect_image",
@@ -542,6 +605,64 @@ class ToolRegistry:
             "path": str(out_path),
             "relative_path": rec.relative_path,
         }
+
+    def _tool_cine_render(self, project_id: str, module: str, preset: str, out_name: str | None) -> dict[str, Any]:
+        from integrations.blender.cine import validate_camera_preset, validate_lighting_preset
+
+        if module == "camera":
+            ok, errors = validate_camera_preset(preset, {})
+            if not ok:
+                return {"status": "error", "message": f"camera preset invalid: {errors}"}
+        elif module == "lighting":
+            ok, errors = validate_lighting_preset(preset, {})
+            if not ok:
+                return {"status": "error", "message": f"lighting preset invalid: {errors}"}
+        out_path = self.project_root / "renders" / (out_name or f"{module}_{preset}_{os.urandom(4).hex()}.png")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        evidence_path = out_path.with_suffix(".json")
+        script = Path("integrations/blender/scripts/apply_cine.py").resolve()
+        cmd = [
+            self.blender_worker.blender_path,
+            "-b",
+            "--python",
+            str(script),
+            "--",
+            "--module",
+            module,
+            "--preset",
+            preset,
+            "--output",
+            str(out_path.resolve()),
+            "--evidence",
+            str(evidence_path.resolve()),
+        ]
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        if res.returncode != 0 or not out_path.exists():
+            return {"status": "error", "message": f"cine {module}/{preset} failed: {res.stderr[-500:]}"}
+        rec = self.artifact_mgr.register_artifact(
+            project_id=project_id,
+            kind=ArtifactKind.IMAGE,
+            file_path=out_path,
+            producer="blender_cine",
+            producer_version="1.0.0",
+            canonical=True,
+            metadata={"module": module, "preset": preset},
+        )
+        return {"status": "ok", "artifact_id": rec.artifact_id, "path": str(out_path)}
+
+    def _tool_camera_configure(self, **kwargs) -> dict[str, Any]:
+        return self._tool_cine_render(kwargs["project_id"], "camera", kwargs["preset"], kwargs.get("output_filename"))
+
+    def _tool_lighting_configure(self, **kwargs) -> dict[str, Any]:
+        return self._tool_cine_render(kwargs["project_id"], "lighting", kwargs["preset"], kwargs.get("output_filename"))
+
+    def _tool_fx_configure(self, **kwargs) -> dict[str, Any]:
+        return self._tool_cine_render(kwargs["project_id"], "fx", kwargs["preset"], kwargs.get("output_filename"))
+
+    def _tool_motion_plan(self, **kwargs) -> dict[str, Any]:
+        from integrations.blender.cine import parse_motion_plan
+
+        return {"status": "ok", "steps": parse_motion_plan(kwargs["text"])}
 
     def _tool_agent_inspect_image(self, **kwargs) -> dict[str, Any]:
         image_path = kwargs["image_path"]
